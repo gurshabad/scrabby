@@ -243,7 +243,7 @@ def main():
 			word = raw_input()
 			print "Enter 'True' if across else 'False':"
 			isAcross = raw_input()
-			if(isAcross == 'True'):
+			if(isAcross == 'True' or isAcross == 'true'):
 				isAcross = True
 			else:
 				isAcross = False
