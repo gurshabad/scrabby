@@ -1,29 +1,42 @@
 from tile import *
+from random import shuffle
 
 class Rack:
-	rack = []
+
+	bag = []
+	#allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
+
 	def __init__(self):
-		for i in range(7):
-			self.rack.append(Tile())
+		self.rack =[]
+		self.numOfTiles = 0
 
 	def showRack(self):
+
 		print "Current Rack"
 		print "-------------"
-		print "Letter:\t",
-		for x in self.rack:
-			if x.letter == " ": print "blank tile",
-			else: print x.letter,
-		print "\nScore:\t",
-		for x in self.rack:
-			if x.value == -1: print "_",
-			else: print x.value,
+		if(len(self.rack) == 0):
+			print "Empty rack"
+		else:
+			print "Letter:\t",
+			for x in self.rack:
+				if x.letter == " ": print "blank tile",
+				else: print x.letter,
+			print "\nScore:\t",
+			for x in self.rack:
+				if x.value == -1: print "_",
+				else: print x.value,
+			print 
 
+	def replenish(self,bag):
 
+		shuffle(bag)
+		needed = 7 - self.numOfTiles
+		letters = bag[:needed]
 
-def main():
-	myRack = Rack()
-	myRack.rack[2] = Tile('A')
-	myRack.showRack()
+		self.numOfTiles = self.numOfTiles + len(letters)
 
-if __name__ == '__main__':
-	main()
+		for letter in letters:
+			self.rack.append(Tile(letter))
+
+		return bag[needed:]
+

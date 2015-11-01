@@ -7,13 +7,14 @@ class TheBoard:
 	"""The Scrabble Board Class"""
 	i = 15
 	j = 15
-	board = []
+	#board = []
 	col_index = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']
 	row_index = range(15)
 
 	def __init__(self):
 		""" 0 - Nothing Special, 1 - Double Letter(DL), 2 - Triple Letter(TL), 3 - Double Word(DW), 4 - Triple Word(TW) """
 		
+		self.board = []
 		for rows in range(self.i):
 			self.board.append([])
 			for cols in range(self.j):
@@ -48,7 +49,7 @@ class TheBoard:
 			if(c < 10): print colored( "  "+str(c)+" ", 'white', 'on_green', attrs=['bold']),
 			else: print colored( " "+str(c)+" ", 'white', 'on_green', attrs=['bold']),
 			for entry in row:
-				if entry.occupied == True: print colored( " "+entry.tile.letter+" ", 'grey', 'on_white', attrs=['bold']),
+				if entry.occupied == True: print colored( " "+entry.tile.letter.upper()+" ", 'grey', 'on_white', attrs=['bold']),
 				else:
 					if entry.special == 4: print colored('3xW', 'red', attrs=[]),
 					elif entry.special == 3: print colored('2xW', 'magenta', attrs=[]),
