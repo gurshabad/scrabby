@@ -62,7 +62,7 @@ def memory_usage():
 
 trieStart = datetime.datetime.now()
 
-newTrie = Trie()
+wordListTrie = Trie()
 
 inputFile = open('Lexicon.txt','r')
 
@@ -77,7 +77,7 @@ for word in inputFile:
 			dontAdd = True
 	#If everything is okay		
 	if not dontAdd:
-		newTrie.addWord(word.strip())
+		wordListTrie.addWord(word.strip())
 
 trieEnd = datetime.datetime.now()
 
@@ -237,10 +237,16 @@ def main():
 
 		while(playerTurn):
 
+			#User input.
+
 			print "Enter number of tiles you wanna play:"
 			wordLength = input()
 			print "Enter word:"
 			word = raw_input()
+			if not wordListTrie.query(word):
+				print "\nSorry, not a word. Try again.\n"
+				continue
+
 			print "Enter 'True' if across else 'False':"
 			isAcross = raw_input()
 			if(isAcross == 'True' or isAcross == 'true'):
@@ -251,6 +257,9 @@ def main():
 			print "Enter 0-indexed start position(r c):"
 			start = map(int, raw_input().split())
 			r,c = start[0],start[1]
+
+
+			#Validity checking.
 
 			if(isAcross):
 				current = [ ourBoard.board[r][c+elem].getChar() for elem in range(len(word)) ]
@@ -275,8 +284,7 @@ def main():
 
 						for idx, elem in enumerate(tiles):
 							if(tiles[idx] == letter):
-								del playerRack.rack[idx]
-								playerRack.numOfTiles -= 1 
+								playerRack.removeTile(idx)
 								break
 
 				playerMove(ourBoard, word, (r,c), isAcross)

@@ -3,9 +3,6 @@ from random import shuffle
 
 class Rack:
 
-	bag = []
-	#allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
-
 	def __init__(self):
 		self.rack =[]
 		self.numOfTiles = 0
@@ -39,4 +36,9 @@ class Rack:
 			self.rack.append(Tile(letter))
 
 		return bag[needed:]
+
+	def removeTile(self,idx):
+		del self.rack[idx]
+		selfRack.numOfTiles -= 1 
+
 
