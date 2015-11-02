@@ -39,6 +39,6 @@ class Rack:
 
 	def removeTile(self,idx):
 		del self.rack[idx]
-		selfRack.numOfTiles -= 1 
+		self.numOfTiles -= 1 
 
 
