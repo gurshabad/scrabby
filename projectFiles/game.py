@@ -314,7 +314,14 @@ def main():
 		while(not playerTurn):
 			#Add AI moves here
 
-			# computerRack.showRack()
+			computerRack.showRack()
+
+			rack = [tile.letter for tile in computerRack.rack]
+			anchorSquare = 8
+			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, 7)
+
+			print legalWords[0]
+			playerMove(ourBoard,legalWords[0][0], (7,7), isAcross)
 
 			# for rowIdx, row in enumerate(ourBoard.board):
 			# 	flag = False
@@ -327,7 +334,6 @@ def main():
 			# 			anchorSquare = idx
 			# 			prevAnchor = anchorSquare
 			# 			del legalWords[:]
-			# 			leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, limit)
 			# 			print "Position:", rowIdx, idx
 			# 			print sorted(legalWords)
 			# 			#playerMove(ourBoard,legalWords[0], (rowIdx,idx), isAcross)
