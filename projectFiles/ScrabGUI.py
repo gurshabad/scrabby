@@ -4,86 +4,17 @@ from tile import *
 from rack import *
 from trie import *
 from inputbox import *
+from helpers import *
+from game import *
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
 
-def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD):
-	pos_r = sanitizedPosition[0]
-	pos_c = sanitizedPosition[1]
-
-	if(playHorizontal == 'Y'):
-		if(pos_r+len(wordPlayed) > 14): return False
-		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_r+idx][pos_c], BOARD)
-	else:
-		if(pos_c+len(wordPlayed) > 14): return False
-		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_r][pos_c+idx], BOARD)
-	return True
-
-def renderTile(letter2play, square, BOARD):
-	FONTSMALL = pygame.font.SysFont('Andale Mono', 13)
-	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 8)
-	square = pygame.draw.rect(BOARD, (238, 228, 218), (square.topleft[0], square.topleft[1], square.width, square.height))
-	BOARD.blit(FONTSMALL.render(letter2play, 1, (50,50,50)),(square.topleft[0]+10, square.topleft[1]+5))
-	BOARD.blit(FONTSMALL2.render(str(Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+20, square.topleft[1]+15))
-
-def renderRackTile(letter, score, square, SECONDHALF):
-	FONTSMALL = pygame.font.SysFont('Andale Mono', 27)
-	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 13)
-	square = pygame.draw.rect(SECONDHALF, (238, 228, 218), (square.topleft[0], square.topleft[1], square.width, square.height))
-	SECONDHALF.blit(FONTSMALL.render(letter, 1, (50,50,50)),(square.topleft[0]+12, square.topleft[1]+5))
-	SECONDHALF.blit(FONTSMALL2.render(str(score), 1, (50,50,50)),(square.bottomright[0] - 10, square.bottomright[1] - 17))
-
-def sanitizePosition(pos):
-	if(len(pos) > 4): return False
-	if(not pos[0].isalpha()):
-		x = ord(pos[-1]) - ord('A')
-		pos = pos[:-1]
-		pos.strip(" ")
-		y = int(''.join(pos)) - 1
-		if(x < 15 and x >= 0 and y < 15 and y >= 0):
-			return (x,y)
-		else: return False
-	else:
-		x = ord(pos[0]) - ord('A')
-		pos = pos[1:]
-		pos.strip(" ")
-		y = int(''.join(pos)) - 1
-		if(x < 15 and x >= 0 and y < 15 and y >= 0):
-			return (x,y)
-		else: return False
-
-def displayScores(scorePlayer, scoreComputer, inBag, SECONDHALF, SCREEN, PLAYER_MOVE):
-	FONT = pygame.font.SysFont('Futura', 27)
-	FONT2 = pygame.font.SysFont('Futura', 24)
-	humanColor = (175,175,175)
-	computerColor = (175,175,175)
-	
-	if(PLAYER_MOVE): humanColor = (102, 204, 255)
-	else: computerColor = humanColor = (102, 204, 255)
-
-	SECONDHALF.blit(FONT.render("HUMAN:", 1, humanColor), (30, 20))
-	SECONDHALF.blit(FONT.render(str(scorePlayer), 1, (175,175,175)), (210, 20))
-	SECONDHALF.blit(FONT.render("COMPUTER:", 1, computerColor), (30, 60))
-	SECONDHALF.blit(FONT.render(str(scoreComputer), 1, (175,175,175)), (210, 60))
-	SECONDHALF.blit(FONT2.render("IN BAG", 1, (204, 102, 255)), (340, 20))
-	SECONDHALF.blit(FONT2.render(str(inBag), 1, (175, 175, 175)), (370, 60))
-	SCREEN.blit(SECONDHALF,(500,0))
-
-def displayRack(rack, SECONDHALF, SCREEN):
-	FONT = pygame.font.SysFont('Futura', 27)
-	rack.showRack()
-	rackSquares = []
-	for x in range(7):
-		rackSquares.append(pygame.draw.rect(SECONDHALF, (238, 228, 218), (70+(50*x), 155, 40, 40)))
-	for idx,element in enumerate(rack.rack):
-		if element.letter == " ": pass
-		else: renderRackTile(element.letter.upper(), element.value, rackSquares[idx], SECONDHALF)
-	SECONDHALF.blit(FONT.render("YOUR RACK", 1, (204, 102, 255)), (170, 200))
-	SCREEN.blit(SECONDHALF,(500,0))
-
 def run_game():
+
+	#------------------------------------------
+	#Init Board
+	
+	ourBoard = TheBoard()
 
 	scorePlayer = 0
 	scoreComputer = 0
@@ -98,29 +29,7 @@ def run_game():
 
 	playerTurn = True
 
-	#------------------------------------------
-	#Build Trie
-
-	wordListTrie = Trie()
-
-	inputFile = open('Lexicon.txt','r')
-
-	for word in inputFile:
-
-		dontAdd = False
-
-		#Check if input is sanitized
-		#Don't allow anything other than lowercase English letters and EOW({)
-		for item in word.strip():
-			if(ord(item) > 123 or ord(item) < 97):
-				dontAdd = True
-		#If everything is okay		
-		if not dontAdd:
-			wordListTrie.addWord(word.strip())
-
-	#------------------------------------------
-	#Init Board
-	ourBoard = TheBoard()
+	wordListTrie = generateWordList()
 
 	#------------------------------------------
 	#Pygame starts
@@ -131,9 +40,6 @@ def run_game():
 	#------------------------------------------
 	#Screen Setup
 
-	FONT = pygame.font.SysFont('Andale Mono', 22)
-	FONTSMALL = pygame.font.SysFont('Futura', 15)
-	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 13)
 	WINDOW = pygame.display.set_mode(size)
 	CAPTION = pygame.display.set_caption('Scrabby')
 	SCREEN = pygame.display.get_surface()
@@ -149,7 +55,13 @@ def run_game():
 	TRANSPARENT.fill((255,255,255))
 
 	#------------------------------------------
-	#board Setup
+	#Fonts Setup
+
+	FONTSMALL = pygame.font.SysFont('Futura', 15)
+	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 13)
+
+	#------------------------------------------
+	#Board Setup
 
 	boardRectangles = []
 	rowMarkers = []
@@ -187,7 +99,7 @@ def run_game():
 				elif y.special == 1: BOARD.blit(FONTSMALL2.render("DL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
 
 	#########################################
-	#Row-Column Markers to be rendered
+	#Row-Column Markers are rendered next
 
 	mychar = 'A'
 
@@ -212,71 +124,70 @@ def run_game():
 	FIRSTHALF.blit(BOARD, (19,19))
 	SCREEN.blit(FIRSTHALF,(0,0))
 	SCREEN.blit(SECONDHALF,(500,0))
-	displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, True)
+	displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
 	displayRack(playerRack, SECONDHALF, SCREEN)
 	pygame.display.flip()
 
 	#-----------------------------------------
-	#Main Loop
 
 	ourBoard.printBoard()
-	while True:
-		pos = pygame.mouse.get_pos()
-		mouse = pygame.draw.circle(TRANSPARENT, (0,0,0), pos, 0)
+	print "Player gets to move first!\n"
+
+	#-----------------------------------------
+	#Main Loop
+
+	while True and len(bag):
 		
 		#------------------------------------
 		#Detect Events
 
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT: sys.exit()
-			else:
-				playHorizontal = ask(SCREEN, SECONDHALF, "Horizontal?(YES/NO)")
-				playHorizontal = (playHorizontal).upper()
-				if(playHorizontal != "YES" and playHorizontal != "NO" and playHorizontal != "Y" and playHorizontal != "N"):
-					print "\nHorizontal? WEIRD INPUT"
-					SECONDHALF.blit(FONT.render("WEIRD INPUT! TRY AGAIN!", 1, (255,0,0)),
-                	((SECONDHALF.get_width() / 2) - 200, (SECONDHALF.get_height() / 2) + 170))
-					SCREEN.blit(SECONDHALF, (500,0))
-					pygame.display.flip()
-					time.sleep(3)
-					break
+		if(playerTurn):
+			motion = getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack) #Get Info from Player
+			if(motion == False): #If Info is not legit, continue
+				continue
+			elif(motion[0] == "Shuffle"): #If Users asks for shuffle
+				playerRack = removeTiles(playerRack, motion[1])
+				playerRack.showRack()
+				print "Shuffle Success!\n\n"
+				playerTurn = False
+				bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
+				displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
+				bag += [x for x in motion[1]]
+				display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+				time.sleep(2)
+				displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+
+			else: #If Info is legit, try playing the word
+				#Check for valid move here
+				current = renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
+				if not (current):
+					print "Error. Invalid Move.\n\n"
+					continue
 				else:
-					playHorizontal = playHorizontal[0]
-					if playHorizontal == 'Y': print "\nHorizontal? Y"
-					else: print "\nHorizontal? N"
-					
-					wordPlayed = ask(SCREEN, SECONDHALF, "WORD?")
-					if(wordListTrie.query(wordPlayed.lower())): #Check if legit word
-						print "Word? " + wordPlayed
-						positionPlayed = ask(SCREEN, SECONDHALF, "POSITION? (ROW COL)")
-						sanitizedPos = sanitizePosition(positionPlayed)
-						if(sanitizedPos != False): #Check if legit position
-							print "Position? " + positionPlayed
-							print "After Sanitization: "+str(sanitizedPos)
-							if not (renderWord(wordPlayed, sanitizedPos, boardRectangles, playHorizontal, BOARD)):
-								print "Error. Invalid Move."
-							else:
-								FIRSTHALF.blit(BOARD, (19,19))
-								SCREEN.blit(FIRSTHALF,(0,0))
-								pygame.display.flip()
-								print "Success!"
-						else:
-							print "Position? " + positionPlayed + " - Invalid Position!"
-							SECONDHALF.blit(FONT.render("Invalid Position! TRY AGAIN!", 1, (255,0,0)),
-                			((SECONDHALF.get_width() / 2) - 200, (SECONDHALF.get_height() / 2) + 170))
-							SCREEN.blit(SECONDHALF, (500,0))
-							pygame.display.flip()
-							time.sleep(3)
-							break
-					else:
-						print "Word? " + wordPlayed + " - This word does not exist!"
-						SECONDHALF.blit(FONT.render("Word is Non-existent! TRY AGAIN!", 1, (255,0,0)),
-                		((SECONDHALF.get_width() / 2) - 200, (SECONDHALF.get_height() / 2) + 170))
-						SCREEN.blit(SECONDHALF, (500,0))
-						pygame.display.flip()
-						time.sleep(3)
-						break
-				pygame.display.flip()
+					FIRSTHALF.blit(BOARD, (19,19))
+					SCREEN.blit(FIRSTHALF,(0,0))
+					pygame.display.flip()
+					print "Move Success!\n\n"
+					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					time.sleep(2)
+					print motion[2]
+					print motion
+					#removeTiles #Remove Tiles from player's rack
+					playerMove(ourBoard, motion[1], (motion[2][1], motion[2][0]), motion[3]) #Play the move on offline board
+					ourBoard.printBoard() #DisplayBoard
+					for x in motion[1]:
+						scorePlayer += Tile(x).getVal() #Increase score
+					playerTurn = False #Change turn to Computer
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+					bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
+					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
+		else: #AI
+			print "Computer is thinking it's move!\n\n\n"
+			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
+			time.sleep(3)
+			playerTurn = True
+			displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+		pygame.display.flip()
 
 def main():
 	run_game()

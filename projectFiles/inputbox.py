@@ -24,15 +24,15 @@ def get_key():
     else:
       pass
 
-def display_box(lvl2, screen, message):
+def display_box(lvl2, screen, message, color):
   "Print a message in a box in the middle of the screen"
-  fontobject = pygame.font.SysFont('American Typewriter', 30)
-  pygame.draw.rect(screen, (25,25,25),
+  fontobject = pygame.font.SysFont('Andale Mono', 30)
+  pygame.draw.rect(screen, color,
                    (0, (screen.get_height() / 2),
                     screen.get_width(),(screen.get_height() / 2)), 0)
   if len(message) != 0:
     screen.blit(fontobject.render(message, 1, (255,255,255)),
-                ((screen.get_width() / 2) - 200, (screen.get_height() / 2) + 30))
+                ((screen.get_width() / 2) - 150, (screen.get_height() / 2) + 100))
     lvl2.blit(screen, (500,0))
   pygame.display.flip()
 
@@ -48,13 +48,13 @@ def display_box2(lvl2, screen, message, ques):
                 ((screen.get_width() / 2) - 200, (screen.get_height() / 2) + 30))
   if len(message) != 0:
     screen.blit(fontobject.render(message.upper(), 1, (255,255,255)),
-                ((screen.get_width() / 2) - 200, (screen.get_height() / 2) + 100))
+                ((screen.get_width() / 2) - 200, (screen.get_height() / 2) + 70))
   lvl2.blit(screen, (500,0))
   pygame.display.flip()
 
 def ask(lvl2, screen, question):
   "ask(screen, question) -> answer"
-  pygame.font.init()
+  #pygame.font.init()
   current_string = []
   display_box2(lvl2, screen, "", question)
   while 1:
