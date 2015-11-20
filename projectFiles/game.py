@@ -235,6 +235,29 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square):
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
 
+occupiedMatrix = [[0] * 15] * 15
+
+def getClashes(r, c, word, occupiedMatrix):
+    for i in range(len(word)):
+        up = r
+        down = r
+        if ((r - 1 < 15) and (r - 1 >= 0) and (c+i < 15) and (c+i >=0)):
+            if occupiedMatrix[r-1][c+i] == 1:
+                up = r - 1
+                while up > 0:
+                    if occupiedMatrix[up][c+i] == 1:
+                        up = up - 1
+
+        if ((r + 1 < 15) and (r + 1 >= 0) and (c+i < 15) and (c+i >= 0)):
+            if occupiedMatrix[r+1][c+i] == 1:
+                down = r + 1
+                while down < 15:
+                    if occupiedMatrix[down][c+i] == 1:
+                        down = down - 1
+
+        #form word, wordListTrie.query(word)
+
+
 def main():
 
 	ourBoard = TheBoard()
@@ -307,6 +330,7 @@ def main():
 								break
 
 				playerMove(ourBoard, word, (r,c), isAcross)
+				checkClashes(r, c, occupiedMatrix)
 
 			playerTurn = False
 			ourBoard.printBoard()
