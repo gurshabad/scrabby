@@ -170,16 +170,16 @@ def run_game():
 					print "Move Success!\n\n"
 					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(2)
-					print motion[2]
-					print motion
 					#removeTiles #Remove Tiles from player's rack
+					current = motion[1]
+					playerRack = removeTiles(playerRack, current)
 					playerMove(ourBoard, motion[1], (motion[2][1], motion[2][0]), motion[3]) #Play the move on offline board
 					ourBoard.printBoard() #DisplayBoard
 					for x in motion[1]:
 						scorePlayer += Tile(x).getVal() #Increase score
 					playerTurn = False #Change turn to Computer
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
 					bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
 					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
 		else: #AI
 			print "Computer is thinking it's move!\n\n\n"
