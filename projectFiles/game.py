@@ -52,12 +52,18 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	current = [ i.lower() for i in current ]
 
 	valid = True
-	for letter in word:
-		if (letter not in current) and (letter not in [ t.letter for t in playerRack.rack ]):
-			print "Uh oh. Invalid move."
-			playerTurn = True 
-			valid = False
-			break
+
+	rackCopy = [ t.letter for t in playerRack.rack ]
+
+	for idx, letter in enumerate(word):
+		if(letter != current[idx]):
+			if (letter not in rackCopy):
+				print "Uh oh. Invalid move."
+				playerTurn = True 
+				valid = False
+				break
+			else:
+				rackCopy.remove(letter)
 
 
 	deleteThis = []
