@@ -32,50 +32,97 @@ def memory_usage():
     return result
 
 
+def validityCheck(isAcross, board, pos, word, playerRack):
+
+	print isAcross, pos, word
+
+	r = pos[1]
+	c = pos[0]
+
+	word = word.lower()
+	#print word
+
+	if(isAcross):
+		current = [ board.board[r][c+elem].getChar() for elem in range(len(word)) ]
+	else:
+		current = [ board.board[r+elem][c].getChar() for elem in range(len(word)) ]
+
+	print current
+
+	current = [ i.lower() for i in current ]
+
+	valid = True
+	for letter in word:
+		if (letter not in current) and (letter not in [ t.letter for t in playerRack.rack ]):
+			print "Uh oh. Invalid move."
+			playerTurn = True 
+			valid = False
+			break
+
+
+	deleteThis = []
+	if not valid:
+		return False
+	else:
+		for letter in word:
+			if letter not in current:
+
+				tiles = [t.letter for t in playerRack.rack]
+
+				for idx, elem in enumerate(tiles):
+					if(tiles[idx] == letter):
+						deleteThis.append(letter)
+						#playerRack.removeTile(idx)
+						break
+
+		return ''.join(deleteThis).upper()
+
+
+
 def playerMove(board, word, pos, isAcross):
 
 	if(isAcross):
-		if(15 - (pos[1] + len(word)) < 0):
-			print "Length Exceeded.\n\n"
-			return board
-		for loc, letter in enumerate(word):
-			if(board.board[pos[0]][pos[1]+loc].occupied and board.board[pos[0]][pos[1]+loc].getChar() != letter):
-				print "Invalid move.\n\n"
-				return board
-
-		if not pos[1] == 0:
-			board.board[pos[0]][pos[1]-1].isAnchor = True;
-		if not pos[1] + len(word)-1 == 14:
-			board.board[pos[0]][pos[1]+len(word)].isAnchor = True;
-
-		for loc, letter in enumerate(word):
-			if not pos[0] == 14:
-				board.board[pos[0]+1][pos[1]+loc].isAnchor = True;
-			if not pos[0] == 0:
-				board.board[pos[0]-1][pos[1]+loc].isAnchor = True;
-			board.board[pos[0]][pos[1]+loc].setTile(Tile(letter))
-
-	else:
 		if(15 - (pos[0] + len(word)) < 0):
 			print "Length Exceeded.\n\n"
-			return board
+			return False
 		for loc, letter in enumerate(word):
-			if(board.board[pos[0]+loc][pos[1]].occupied and board.board[pos[0]+loc][pos[1]].getChar() != letter):
+			if(board.board[pos[1]][pos[0]+loc].occupied and board.board[pos[1]][pos[0]+loc].getChar() != letter):
 				print "Invalid move.\n\n"
-				return board
+				return False
 
 		if not pos[0] == 0:
-			board.board[pos[0]-1][pos[1]].isAnchor = True;
+			board.board[pos[1]][pos[0]-1].isAnchor = True;
 		if not pos[0] + len(word)-1 == 14:
-			board.board[pos[0]+len(word)][pos[1]].isAnchor = True;
+			board.board[pos[1]][pos[0]+len(word)].isAnchor = True;
 
 		for loc, letter in enumerate(word):
 			if not pos[1] == 14:
-				board.board[pos[0]+loc][pos[1] + 1].isAnchor = True;
+				board.board[pos[1]+1][pos[0]+loc].isAnchor = True;
 			if not pos[1] == 0:
-				board.board[pos[0]+loc][pos[1]-1].isAnchor = True;
+				board.board[pos[1]-1][pos[0]+loc].isAnchor = True;
+			board.board[pos[1]][pos[0]+loc].setTile(Tile(letter))
 
-			board.board[pos[0]+loc][pos[1]].setTile(Tile(letter))
+	else:
+		if(15 - (pos[1] + len(word)) < 0):
+			print "Length Exceeded.\n\n"
+			return False
+		for loc, letter in enumerate(word):
+			if(board.board[pos[1]+loc][pos[0]].occupied and board.board[pos[1]+loc][pos[0]].getChar() != letter):
+				print "Invalid move.\n\n"
+				return False
+
+		if not pos[1] == 0:
+			board.board[pos[1]-1][pos[0]].isAnchor = True;
+		if not pos[1] + len(word)-1 == 14:
+			board.board[pos[1]+len(word)][pos[0]].isAnchor = True;
+
+		for loc, letter in enumerate(word):
+			if not pos[0] == 14:
+				board.board[pos[1]+loc][pos[0] + 1].isAnchor = True;
+			if not pos[0] == 0:
+				board.board[pos[1]+loc][pos[0]-1].isAnchor = True;
+
+			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
 
 
 import string, random
@@ -258,116 +305,116 @@ def getClashes(r, c, word, occupiedMatrix):
         #form word, wordListTrie.query(word)
 
 
-def main():
+# def main():
 
-	ourBoard = TheBoard()
-	ourBoard.printBoard()
+# 	ourBoard = TheBoard()
+# 	ourBoard.printBoard()
 
-	playerRack = Rack()
-	computerRack = Rack()
+# 	playerRack = Rack()
+# 	computerRack = Rack()
 
-	bag = [ letter for letter in allLetters ]
+# 	bag = [ letter for letter in allLetters ]
 
-	bag = playerRack.replenish(bag);
-	bag = computerRack.replenish(bag);
+# 	bag = playerRack.replenish(bag);
+# 	bag = computerRack.replenish(bag);
 
-	playerTurn = True
-	print "You get to move first! Here is your rack"
+# 	playerTurn = True
+# 	print "You get to move first! Here is your rack"
 
-	while(len(bag)):
+# 	while(len(bag)):
 
-		bag = playerRack.replenish(bag);
-		playerRack.showRack()
+# 		bag = playerRack.replenish(bag);
+# 		playerRack.showRack()
 
-		while(playerTurn):
+# 		while(playerTurn):
 
-			#User input.
+# 			#User input.
 
-			print "Enter number of tiles you wanna play:"
-			wordLength = input()
-			print "Enter word:"
-			word = raw_input()
-			if not wordListTrie.query(word):
-				print "\nSorry, not a word. Try again.\n"
-				continue
+# 			print "Enter number of tiles you wanna play:"
+# 			wordLength = input()
+# 			print "Enter word:"
+# 			word = raw_input()
+# 			if not wordListTrie.query(word):
+# 				print "\nSorry, not a word. Try again.\n"
+# 				continue
 
-			print "Enter 'True' if across else 'False':"
-			isAcross = raw_input()
-			if(isAcross == 'True' or isAcross == 'true'):
-				isAcross = True
-			else:
-				isAcross = False
+# 			print "Enter 'True' if across else 'False':"
+# 			isAcross = raw_input()
+# 			if(isAcross == 'True' or isAcross == 'true'):
+# 				isAcross = True
+# 			else:
+# 				isAcross = False
 
-			print "Enter 0-indexed start position(r c):"
-			start = map(int, raw_input().split())
-			r,c = start[0],start[1]
+# 			print "Enter 0-indexed start position(r c):"
+# 			start = map(int, raw_input().split())
+# 			r,c = start[0],start[1]
 
-			#Validity checking.
-			if(isAcross):
-				current = [ ourBoard.board[r][c+elem].getChar() for elem in range(len(word)) ]
-			else:
-				current = [ ourBoard.board[r+elem][c].getChar() for elem in range(len(word)) ]
+# 			#Validity checking.
+# 			if(isAcross):
+# 				current = [ ourBoard.board[r][c+elem].getChar() for elem in range(len(word)) ]
+# 			else:
+# 				current = [ ourBoard.board[r+elem][c].getChar() for elem in range(len(word)) ]
 
-			valid = True
-			for letter in word:
-				if (letter not in current) and (letter not in [ t.letter for t in playerRack.rack ]):
-					print "Uh oh. Invalid move."
-					playerTurn = True 
-					valid = False
-					break
+# 			valid = True
+# 			for letter in word:
+# 				if (letter not in current) and (letter not in [ t.letter for t in playerRack.rack ]):
+# 					print "Uh oh. Invalid move."
+# 					playerTurn = True 
+# 					valid = False
+# 					break
 
-			if not valid:
-				continue
-			else:
-				for letter in word:
-					if letter not in current:
+# 			if not valid:
+# 				continue
+# 			else:
+# 				for letter in word:
+# 					if letter not in current:
 
-						tiles = [t.letter for t in playerRack.rack]
+# 						tiles = [t.letter for t in playerRack.rack]
 
-						for idx, elem in enumerate(tiles):
-							if(tiles[idx] == letter):
-								playerRack.removeTile(idx)
-								break
+# 						for idx, elem in enumerate(tiles):
+# 							if(tiles[idx] == letter):
+# 								playerRack.removeTile(idx)
+# 								break
 
-				playerMove(ourBoard, word, (r,c), isAcross)
-				checkClashes(r, c, occupiedMatrix)
+# 				playerMove(ourBoard, word, (c,r), isAcross)
+# 				checkClashes(r, c, occupiedMatrix)
 
-			playerTurn = False
-			ourBoard.printBoard()
+# 			playerTurn = False
+# 			ourBoard.printBoard()
 
-		while(not playerTurn):
-			#Add AI moves here
+# 		while(not playerTurn):
+# 			#Add AI moves here
 
-			computerRack.showRack()
+# 			computerRack.showRack()
 
-			rack = [tile.letter for tile in computerRack.rack]
-			anchorSquare = 8
-			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, 7)
+# 			rack = [tile.letter for tile in computerRack.rack]
+# 			anchorSquare = 8
+# 			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, 7)
 
-			print legalWords[0]
-			playerMove(ourBoard,legalWords[0][0], (7,7), isAcross)
+# 			print legalWords[0]
+# 			playerMove(ourBoard,legalWords[0][0], (7,7), isAcross)
 
-			# for rowIdx, row in enumerate(ourBoard.board):
-			# 	flag = False
-			# 	for idx, sq in enumerate(row):
-			# 		prevAnchor = -1
-			# 		if sq.isAnchor:
+# 			# for rowIdx, row in enumerate(ourBoard.board):
+# 			# 	flag = False
+# 			# 	for idx, sq in enumerate(row):
+# 			# 		prevAnchor = -1
+# 			# 		if sq.isAnchor:
 
-			# 			rack = [tile.letter for tile in computerRack.rack]
-			# 			limit = min(idx, idx-prevAnchor-1)
-			# 			anchorSquare = idx
-			# 			prevAnchor = anchorSquare
-			# 			del legalWords[:]
-			# 			print "Position:", rowIdx, idx
-			# 			print sorted(legalWords)
-			# 			#playerMove(ourBoard,legalWords[0], (rowIdx,idx), isAcross)
-			# 			flag = True
-			# 			break
-			# 	if(flag):
-			# 		break
+# 			# 			rack = [tile.letter for tile in computerRack.rack]
+# 			# 			limit = min(idx, idx-prevAnchor-1)
+# 			# 			anchorSquare = idx
+# 			# 			prevAnchor = anchorSquare
+# 			# 			del legalWords[:]
+# 			# 			print "Position:", rowIdx, idx
+# 			# 			print sorted(legalWords)
+# 			# 			#playerMove(ourBoard,legalWords[0], (rowIdx,idx), isAcross)
+# 			# 			flag = True
+# 			# 			break
+# 			# 	if(flag):
+# 			# 		break
 
 
-			playerTurn = True
+# 			playerTurn = True
 		
-if __name__ == '__main__':
-	main()
+# if __name__ == '__main__':
+# 	main()

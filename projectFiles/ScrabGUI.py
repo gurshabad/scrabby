@@ -159,7 +159,9 @@ def run_game():
 
 			else: #If Info is legit, try playing the word
 				#Check for valid move here
-				current = renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
+				current = validityCheck(motion[3], ourBoard, motion[2], motion[1], playerRack)
+				print current, "FUCK"
+				current2 = renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
 				if not (current):
 					print "Error. Invalid Move.\n\n"
 					continue
@@ -171,9 +173,9 @@ def run_game():
 					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(2)
 					#removeTiles #Remove Tiles from player's rack
-					current = motion[1]
+					#current = motion[1]
 					playerRack = removeTiles(playerRack, current)
-					playerMove(ourBoard, motion[1], (motion[2][1], motion[2][0]), motion[3]) #Play the move on offline board
+					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #Play the move on offline board
 					ourBoard.printBoard() #DisplayBoard
 					for x in motion[1]:
 						scorePlayer += Tile(x).getVal() #Increase score
