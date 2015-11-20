@@ -39,6 +39,12 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	r = pos[1]
 	c = pos[0]
 
+	if(isAcross):
+		if(c+len(word) > 15): return False
+
+	else:
+		if(r+len(word) > 15): return False
+
 	word = word.lower()
 	#print word
 

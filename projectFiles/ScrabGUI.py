@@ -164,6 +164,8 @@ def run_game():
 
 				if not (current):
 					print "Error. Invalid Move.\n\n"
+					display_box(SCREEN, SECONDHALF, "Invalid Move!", (139,0,0))
+					time.sleep(2)
 					continue
 				else:
 					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)

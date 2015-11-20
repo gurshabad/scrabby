@@ -13,11 +13,9 @@ def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, B
 	print len(wordPlayed)
 
 	if(playHorizontal):
-		if(pos_r+len(wordPlayed) > 15): return False
 		for idx, x in enumerate(wordPlayed):
 			renderTile(x, boardRectangles[pos_r+idx][pos_c], BOARD)
 	else:
-		if(pos_c+len(wordPlayed) > 15): return False
 		for idx, x in enumerate(wordPlayed):
 			renderTile(x, boardRectangles[pos_r][pos_c+idx], BOARD)
 	return True
