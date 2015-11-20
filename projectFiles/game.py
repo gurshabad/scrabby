@@ -54,6 +54,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	valid = True
 
 	rackCopy = [ t.letter for t in playerRack.rack ]
+	deleteThis = []
 
 	for idx, letter in enumerate(word):
 		if(letter != current[idx]):
@@ -63,23 +64,24 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 				return False
 			else:
 				rackCopy.remove(letter)
+				deleteThis.append(letter)
 
-	deleteThis = []
-	if not valid:
-		return False
-	else:
-		for letter in word:
-			if letter not in current:
+	# if not valid:
+		# return False
 
-				tiles = [t.letter for t in playerRack.rack]
+	# else:
+	# 	for letter in word:
+	# 		if letter not in current:
 
-				for idx, elem in enumerate(tiles):
-					if(tiles[idx] == letter):
-						deleteThis.append(letter)
-						#playerRack.removeTile(idx)
-						break
+	# 			tiles = [t.letter for t in playerRack.rack]
 
-		return ''.join(deleteThis).upper()
+	# 			for idx, elem in enumerate(tiles):
+	# 				if(tiles[idx] == letter):
+	# 					deleteThis.append(letter)
+	# 					#playerRack.removeTile(idx)
+	# 					break
+
+	return ''.join(deleteThis).upper()
 
 
 
