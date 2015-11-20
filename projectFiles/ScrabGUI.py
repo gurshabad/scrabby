@@ -160,12 +160,13 @@ def run_game():
 			else: #If Info is legit, try playing the word
 				#Check for valid move here
 				current = validityCheck(motion[3], ourBoard, motion[2], motion[1], playerRack)
-				print current, "FUCK"
-				current2 = renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
+				#print current, "FUCK"
+
 				if not (current):
 					print "Error. Invalid Move.\n\n"
 					continue
 				else:
+					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()

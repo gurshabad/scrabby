@@ -59,12 +59,10 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 		if(letter != current[idx]):
 			if (letter not in rackCopy):
 				print "Uh oh. Invalid move."
-				playerTurn = True 
 				valid = False
-				break
+				return False
 			else:
 				rackCopy.remove(letter)
-
 
 	deleteThis = []
 	if not valid:
