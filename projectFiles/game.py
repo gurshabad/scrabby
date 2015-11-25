@@ -33,6 +33,91 @@ def memory_usage():
     return result
 
 
+
+def setCrossCheckBits(board, wordList):
+
+	#Set acrossCrossCheck Bits
+
+	for i in xrange(15):
+		for j in xrange(15):
+
+			partialFrontWord = ''
+			partialBackWord = ''
+
+			if(i < 14):
+				if(board.board[i+1][j].occupied):
+
+					k=1
+					while(board.board[i+k][j].occupied):
+						partialFrontWord =  partialFrontWord + board.board[i+k][j].getChar()
+						k += 1
+						if(i+k>14):
+							break
+			if(i > 0):
+				if(board.board[i-1][j].occupied):
+
+					k=1
+					while(board.board[i-k][j].occupied):
+						partialBackWord = board.board[i-k][j].getChar() + partialBackWord
+						k += 1
+						if(i-k<0):
+							break
+
+			for letNo in xrange(26):
+				letter = chr(letNo + ord('a'))
+				word = partialBackWord + letter + partialFrontWord
+
+				if(len(word) > 1):
+
+			#		if(i == 7 and j == 8):
+						# print "HERE"
+						# print word
+					if(wordList.query(word)):
+						board.board[i][j].acrossCrossCheck[letNo] = True
+					else:
+						board.board[i][j].acrossCrossCheck[letNo] = False
+
+			# if(i == 7 and j == 8):
+			# 	print "HERE"
+			# 	print board.board[i][j].acrossCrossCheck
+
+	#Set downCrossCheck Bits
+
+	for i in xrange(15):
+		for j in xrange(15):
+
+			partialFrontWord = ''
+			partialBackWord = ''
+
+			if(j < 14):
+				if(board.board[i][j+1].occupied):
+
+					k=1
+					while(board.board[i][j+k].occupied):
+						partialFrontWord =  partialFrontWord + board.board[i][j+k].getChar()
+						k += 1
+						if(j+k>14):
+							break
+			if(j > 0):
+				if(board.board[i][j-1].occupied):
+
+					k=1
+					while(board.board[i][j-k].occupied):
+						partialBackWord = board.board[i][j-k].getChar() + partialBackWord
+						k += 1
+						if(j-k<0):
+							break
+
+			for letNo in xrange(26):
+				letter = chr(letNo + ord('a'))
+				word = partialBackWord + letter + partialFrontWord
+				if(len(word) > 1):
+					if(wordList.query(word)):
+						board.board[i][j].downCrossCheck[letNo] = True
+					else:
+						board.board[i][j].downCrossCheck[letNo] = False
+
+
 def validityCheck(isAcross, board, pos, word, playerRack):
 
 	print word, pos, isAcross
@@ -234,11 +319,14 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 					return
 
 			#For each tile playable on anchorSquare
+
 			for child in currentNode.children:
 				if child in rack:
-					rack.remove(child)
-					extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
-					rack.append(child)
+					#print "HEREIAM", board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')]
+					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove(child)
+						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						rack.append(child)
 
 	#Case 2: Left of anchor square vacant
 	else:
@@ -247,7 +335,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 
 		#For each tile playable on anchorSquare
 		for child in currentNode.children:
-			if child in rack:
+			if child in rack and board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 				rack.remove(child)
 				extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 				rack.append(child)
@@ -288,10 +376,8 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legal
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
-				if child in rack:  #and it can be legally placed on the next square.
-
+				if child in rack and board[rowIdx][square+1].acrossCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
 					rack.remove(child)
-
 					extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
 					rack.append(child)
 
@@ -331,7 +417,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 
 			#For each tile playable on anchorSquare
 			for child in currentNode.children:
-				if child in rack:
+				if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 					rack.remove(child)
 					extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 					rack.append(child)
@@ -343,7 +429,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 
 		#For each tile playable on anchorSquare
 		for child in currentNode.children:
-			if child in rack:
+			if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 				rack.remove(child)
 				extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 				rack.append(child)
@@ -383,7 +469,7 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
-				if child in rack:  #and it can be legally placed on the next square.
+				if child in rack and board[square+1][colIdx].downCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
 					rack.remove(child)
 					extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
 					rack.append(child)
@@ -450,7 +536,8 @@ def main():
 
 			#User input.
 
-			bag = playerRack.replenish(bag);
+			setCrossCheckBits(ourBoard, wordListTrie)
+			bag = playerRack.replenish(bag)
 
 			playerRack.showRack()
 
@@ -489,42 +576,51 @@ def main():
 		while(not playerTurn):
 			#Add AI moves here
 
+			setCrossCheckBits(ourBoard, wordListTrie)
+
 			bag = computerRack.replenish(bag);
 
 			computerRack.showRack()
 
-			# anchorSquare = 8
-			# legalWords = []
-			# leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, anchorSquare, 4, legalWords)
-			# print legalWords
 
-			#List of 3-tuples: (word, pos, isAcross)			
+			# playerTurn = True
+			# continue
+
+			rack = [ i.letter for i in computerRack.rack]
+
+			anchorSquare = 8
 			legalWords = []
+			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, anchorSquare, 4, legalWords)
 
-			#Generate all across moves
-			for rowIdx, row in enumerate(ourBoard.board):
-				for idx, sq in enumerate(row):
-					prevAnchor = -1
-					if sq.isAnchor:
+			print legalWords
 
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
+			#List of 4-tuples: (word, pos, isAcross)			
+			# # legalWords = []
 
-						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+			# # #Generate all across moves
+			# # for rowIdx, row in enumerate(ourBoard.board):
+			# # 	for idx, sq in enumerate(row):
+			# # 		prevAnchor = -1
+			# # 		if sq.isAnchor:
 
-			#Generate all down moves
-			for colIdx in xrange(len(ourBoard.board)):
-				for rowIdx in xrange(len(ourBoard.board)):
-					prevAnchor = -1
-					sq = ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
+			# # 			limit = min(idx, idx-prevAnchor-1)
+			# # 			anchorSquare = idx
+			# # 			prevAnchor = anchorSquare
 
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
+			# # 			leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
-						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+			# #Generate all down moves
+			# for colIdx in xrange(len(ourBoard.board)):
+			# 	for rowIdx in xrange(len(ourBoard.board)):
+			# 		prevAnchor = -1
+			# 		sq = ourBoard.board[rowIdx][colIdx]
+			# 		if sq.isAnchor:
+
+			# 			limit = min(rowIdx, rowIdx-prevAnchor-1)
+			# 			anchorSquare = rowIdx
+			# 			prevAnchor = anchorSquare
+
+			# 			upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 	
 
 			random.shuffle(legalWords)

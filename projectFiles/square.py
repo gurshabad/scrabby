@@ -12,9 +12,12 @@ class Square:
 	def __init__(self):
 		self.occupied = False
 		self.isAnchor = False
-		self.crossSet = []
+		self.downCrossCheck = []
+		self.acrossCrossCheck = []
 		for _ in range(26):
-			self.crossSet += [False]
+			self.downCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in a down move. 
+		for _ in range(26):
+			self.acrossCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in an across move.
 		self.special = 0
 		self.tile = Tile()
 

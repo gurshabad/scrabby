@@ -144,6 +144,8 @@ def run_game():
 		ourBoard.board[7][7].isAnchor = True
 
 		if(playerTurn):
+
+			setCrossCheckBits(ourBoard, wordListTrie)			
 			motion = getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack) #Get Info from Player
 			if(motion == False): #If Info is not legit, continue
 				continue
@@ -196,8 +198,9 @@ def run_game():
 
 		else: #AI
 			print "Computer is thinking it's move!\n\n\n"
+			setCrossCheckBits(ourBoard, wordListTrie)						
 			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
-			time.sleep(3)
+			time.sleep(2)
 
 			rack = [tile.letter for tile in computerRack.rack]
 
