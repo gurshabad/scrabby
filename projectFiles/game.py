@@ -69,17 +69,10 @@ def setCrossCheckBits(board, wordList):
 
 				if(len(word) > 1):
 
-			#		if(i == 7 and j == 8):
-						# print "HERE"
-						# print word
 					if(wordList.query(word)):
 						board.board[i][j].acrossCrossCheck[letNo] = True
 					else:
 						board.board[i][j].acrossCrossCheck[letNo] = False
-
-			# if(i == 7 and j == 8):
-			# 	print "HERE"
-			# 	print board.board[i][j].acrossCrossCheck
 
 	#Set downCrossCheck Bits
 
@@ -157,6 +150,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	#Check 2: Check if we even have the letters not on the board on our rack.
 	#Check 3: Check if letters on the board line up with letters in the word.
 	#Check 4: Check if we are using atleast one anchor square.
+	#Check 5: Check if we're not creating new nonsense words 
 
 	for idx, letter in enumerate(word):
 
@@ -169,6 +163,17 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 			else:
 				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
 				deleteThis.append(letter)
+
+			if(isAcross):
+				if not current[idx].acrossCrossCheck[ord(letter)-ord('a')]:
+					print "Uh oh #5 Invalid move. Extra nonsense words."
+					return False
+			else:
+				if not current[idx].downCrossCheck[ord(letter)-ord('a')]:
+					print "Uh oh #5 Invalid move. Extra nonsense words."
+					return False
+				
+
 		elif(current[idx].getChar() != letter): #If not blank position but letter does not match.
 			print "Uh oh #3 Invalid move."
 			return False
