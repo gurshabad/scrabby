@@ -9,7 +9,7 @@ def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, B
 	pos_r = sanitizedPosition[0]
 	pos_c = sanitizedPosition[1]
 
-	#wordPlayed = wordPlayed.upper()
+	wordPlayed = wordPlayed.upper()
 	print pos_r, pos_c
 	print len(wordPlayed)
 
