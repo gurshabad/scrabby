@@ -199,10 +199,9 @@ def run_game():
 			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
 			time.sleep(3)
 
-			print "WTF"
 			rack = [tile.letter for tile in computerRack.rack]
 
-			#List of 3-tuples: (word, pos, isAcross)			
+			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
 
 			#Generate all across moves
@@ -232,6 +231,8 @@ def run_game():
 	
 
 			random.shuffle(legalWords)
+
+			print legalWords
 
 			if(len(legalWords)):
 
