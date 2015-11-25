@@ -49,43 +49,40 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	#print word
 
 	if(isAcross):
-		current = [ board.board[r][c+elem].getChar() for elem in range(len(word)) ]
+		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
 	else:
-		current = [ board.board[r+elem][c].getChar() for elem in range(len(word)) ]
+		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
 
-	print current
-
-	current = [ i.lower() for i in current ]
+	print [ c.getChar() for c in current ]
 
 	valid = True
 
 	rackCopy = [ t.letter for t in playerRack.rack ]
 	deleteThis = []
 
+	anchorFlag = False
+
 	for idx, letter in enumerate(word):
-		if(letter != current[idx]):
-			if (letter not in rackCopy):
+
+		if(anchorFlag == False):
+			anchorFlag = current[idx].isAnchor
+		if( current[idx].getChar().lower() == '_'):  #If blank position
+			if (letter not in rackCopy): #Check if we even have the letter in our rack.
 				print "Uh oh. Invalid move."
 				valid = False
 				return False
 			else:
-				rackCopy.remove(letter)
+				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
 				deleteThis.append(letter)
+		elif(current[idx].getChar().lower() != letter): #If not blank position but letter does not match.
+			print "Uh oh. Invalid move."
+			valid = False
+			return False
 
-	# if not valid:
-		# return False
+		#If not blank and letter matches, just continue cuz everything is chill.
 
-	# else:
-	# 	for letter in word:
-	# 		if letter not in current:
-
-	# 			tiles = [t.letter for t in playerRack.rack]
-
-	# 			for idx, elem in enumerate(tiles):
-	# 				if(tiles[idx] == letter):
-	# 					deleteThis.append(letter)
-	# 					#playerRack.removeTile(idx)
-	# 					break
+	if not anchorFlag:
+		return False
 
 	return ''.join(deleteThis).upper()
 
@@ -94,13 +91,14 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 def playerMove(board, word, pos, isAcross):
 
 	if(isAcross):
-		if(15 - (pos[0] + len(word)) < 0):
-			print "Length Exceeded.\n\n"
-			return False
-		for loc, letter in enumerate(word):
-			if(board.board[pos[1]][pos[0]+loc].occupied and board.board[pos[1]][pos[0]+loc].getChar() != letter):
-				print "Invalid move.\n\n"
-				return False
+
+		# anchorFlag 
+		# for loc, letter in enumerate(word):
+		# 	if(board.board[pos[1]][pos[0]+loc].occupied and board.board[pos[1]][pos[0]+loc].getChar() != letter):
+		# 		print "Invalid move.\n\n"
+		# 		return False
+		# 	if(board.board[pos[1]][pos[0]+loc].isAnchor == True):
+		# 		flag = True
 
 		if not pos[0] == 0:
 			board.board[pos[1]][pos[0]-1].isAnchor = True;
@@ -115,13 +113,11 @@ def playerMove(board, word, pos, isAcross):
 			board.board[pos[1]][pos[0]+loc].setTile(Tile(letter))
 
 	else:
-		if(15 - (pos[1] + len(word)) < 0):
-			print "Length Exceeded.\n\n"
-			return False
-		for loc, letter in enumerate(word):
-			if(board.board[pos[1]+loc][pos[0]].occupied and board.board[pos[1]+loc][pos[0]].getChar() != letter):
-				print "Invalid move.\n\n"
-				return False
+
+		# for loc, letter in enumerate(word):
+		# 	if(board.board[pos[1]+loc][pos[0]].occupied and board.board[pos[1]+loc][pos[0]].getChar() != letter):
+		# 		print "Invalid move.\n\n"
+		# 		return False
 
 		if not pos[1] == 0:
 			board.board[pos[1]-1][pos[0]].isAnchor = True;

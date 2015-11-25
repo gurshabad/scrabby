@@ -141,6 +141,8 @@ def run_game():
 		#------------------------------------
 		#Detect Events
 
+		ourBoard.board[7][7].isAnchor = True
+
 		if(playerTurn):
 			motion = getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack) #Get Info from Player
 			if(motion == False): #If Info is not legit, continue
