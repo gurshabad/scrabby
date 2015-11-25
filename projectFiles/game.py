@@ -9,8 +9,9 @@ from gen_board import *
 from tile import *
 from rack import *
 from trie import *
+from helpers import *
 from copy import deepcopy
-
+import random
 #For benchmarking:
 
 def memory_usage():
@@ -34,19 +35,27 @@ def memory_usage():
 
 def validityCheck(isAcross, board, pos, word, playerRack):
 
-	print isAcross, pos, word
+	print word, pos, isAcross
 
 	r = pos[1]
 	c = pos[0]
 
+	#Check 1: Check if word stays within bounds of the board
+
 	if(isAcross):
-		if(c+len(word) > 15): return False
+		if(c+len(word) > 15): 
+			print "Uh oh #1 Invalid move."
+			return False
 
 	else:
-		if(r+len(word) > 15): return False
+		if(r+len(word) > 15): 
+			print "Uh oh #1 Invalid move."
+			return False
 
-	word = word.lower()
+	#word = word.lower()
 	#print word
+
+	#Get a snapshot of the board at the desired positions
 
 	if(isAcross):
 		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
@@ -55,80 +64,84 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 
 	print [ c.getChar() for c in current ]
 
-	valid = True
-
 	rackCopy = [ t.letter for t in playerRack.rack ]
 	deleteThis = []
 
 	anchorFlag = False
 
+	#Check 2: Check if we even have the letters not on the board on our rack.
+	#Check 3: Check if letters on the board line up with letters in the word.
+	#Check 4: Check if we are using atleast one anchor square.
+
 	for idx, letter in enumerate(word):
 
 		if(anchorFlag == False):
 			anchorFlag = current[idx].isAnchor
-		if( current[idx].getChar().lower() == '_'):  #If blank position
+		if( current[idx].getChar() == '_'):  #If blank position
 			if (letter not in rackCopy): #Check if we even have the letter in our rack.
-				print "Uh oh. Invalid move."
-				valid = False
+				print "Uh oh #2 Invalid move."
 				return False
 			else:
 				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
 				deleteThis.append(letter)
-		elif(current[idx].getChar().lower() != letter): #If not blank position but letter does not match.
-			print "Uh oh. Invalid move."
-			valid = False
+		elif(current[idx].getChar() != letter): #If not blank position but letter does not match.
+			print "Uh oh #3 Invalid move."
 			return False
 
 		#If not blank and letter matches, just continue cuz everything is chill.
 
 	if not anchorFlag:
+		print "Uh oh #4 Invalid move."
 		return False
 
-	return ''.join(deleteThis).upper()
+	#Return list of letters to be removed from the rack.
+	return ''.join(deleteThis)
 
 
-
+#The following function just sets the tiles in the backend board and sets adjacent squares to Anchor 
 def playerMove(board, word, pos, isAcross):
+
+	#word = word.lower()
 
 	if(isAcross):
 
-		# anchorFlag 
-		# for loc, letter in enumerate(word):
-		# 	if(board.board[pos[1]][pos[0]+loc].occupied and board.board[pos[1]][pos[0]+loc].getChar() != letter):
-		# 		print "Invalid move.\n\n"
-		# 		return False
-		# 	if(board.board[pos[1]][pos[0]+loc].isAnchor == True):
-		# 		flag = True
-
 		if not pos[0] == 0:
-			board.board[pos[1]][pos[0]-1].isAnchor = True;
+			if board.board[pos[1]][pos[0]-1].occupied == False:
+				board.board[pos[1]][pos[0]-1].isAnchor = True
 		if not pos[0] + len(word)-1 == 14:
-			board.board[pos[1]][pos[0]+len(word)].isAnchor = True;
+			if board.board[pos[1]][pos[0]+len(word)].occupied == False:
+				board.board[pos[1]][pos[0]+len(word)].isAnchor = True
 
 		for loc, letter in enumerate(word):
 			if not pos[1] == 14:
-				board.board[pos[1]+1][pos[0]+loc].isAnchor = True;
+				if board.board[pos[1]+1][pos[0]+loc].occupied == False :				
+					board.board[pos[1]+1][pos[0]+loc].isAnchor = True
 			if not pos[1] == 0:
-				board.board[pos[1]-1][pos[0]+loc].isAnchor = True;
+				if board.board[pos[1]-1][pos[0]+loc].occupied == False:
+					board.board[pos[1]-1][pos[0]+loc].isAnchor = True
+
+			board.board[pos[1]][pos[0]+loc].isAnchor = False
+
 			board.board[pos[1]][pos[0]+loc].setTile(Tile(letter))
 
 	else:
 
-		# for loc, letter in enumerate(word):
-		# 	if(board.board[pos[1]+loc][pos[0]].occupied and board.board[pos[1]+loc][pos[0]].getChar() != letter):
-		# 		print "Invalid move.\n\n"
-		# 		return False
-
 		if not pos[1] == 0:
-			board.board[pos[1]-1][pos[0]].isAnchor = True;
+			if board.board[pos[1]-1][pos[0]].occupied == False:
+				board.board[pos[1]-1][pos[0]].isAnchor = True
 		if not pos[1] + len(word)-1 == 14:
-			board.board[pos[1]+len(word)][pos[0]].isAnchor = True;
+			if board.board[pos[1]+len(word)][pos[0]].occupied == False:
+				board.board[pos[1]+len(word)][pos[0]].isAnchor = True
 
 		for loc, letter in enumerate(word):
 			if not pos[0] == 14:
-				board.board[pos[1]+loc][pos[0] + 1].isAnchor = True;
+				if board.board[pos[1]+loc][pos[0] + 1].occupied == False:
+					board.board[pos[1]+loc][pos[0] + 1].isAnchor = True
 			if not pos[0] == 0:
-				board.board[pos[1]+loc][pos[0]-1].isAnchor = True;
+				if board.board[pos[1]+loc][pos[0]-1].occupied == False:
+					board.board[pos[1]+loc][pos[0]-1].isAnchor = True
+
+			board.board[pos[1]+loc][pos[0]].isAnchor = False
 
 			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
 
@@ -190,46 +203,63 @@ trieEnd = datetime.datetime.now()
 #For extendRightBeta: For each prefix formed, it tries to place playable characters on anchorSquare
 #by calling extendRightBeta
 
-anchorSquare = 0
 
-def leftPart(board, rowIdx, rack, partialWord, currentNode, limit):
+def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit, legalWords):
 
 	#Case 1: Left of anchor square occupied
-	if(board[rowIdx][anchorSquare-1].getChar() != '_'):
-		leftSquare = anchorSquare-1
-		leftBit = board[rowIdx][leftSquare].getChar()
 
-		#Construct the existing leftPart
-		while(board[rowIdx][leftSquare-1].getChar() != '_'):
-			leftSquare = leftSquare - 1
-			leftBit = board[rowIdx][leftSquare].getChar() + leftBit
+	if anchorSquare > 0:
+		if(board[rowIdx][anchorSquare-1].getChar() != '_'):
 
-		#Walk down the trie to node with leftBit path
-		for element in leftBit:
-			currentNode = currentNode.children[element]
+			#print "THIS HAPPENED\n"
+			leftSquare = anchorSquare-1
+			leftBit = board[rowIdx][leftSquare].getChar()
 
-		#For each tile playable on anchorSquare
-		for child in currentNode.children:
-			if child in rack:
-				extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare)
+			#Construct the existing leftPart
+			while(leftSquare > 0):
+
+				if(board[rowIdx][leftSquare-1].getChar() == '_'):
+					break
+
+				leftSquare = leftSquare - 1
+
+				leftBit = board[rowIdx][leftSquare].getChar() + leftBit
+
+			#Walk down the trie to node with leftBit path
+
+			for element in leftBit:
+				if element in currentNode.children:
+					currentNode = currentNode.children[element]
+				else:
+					return
+
+			#For each tile playable on anchorSquare
+			for child in currentNode.children:
+				if child in rack:
+					rack.remove(child)
+					extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					rack.append(child)
 
 	#Case 2: Left of anchor square vacant
 	else:
 
+		##print "NO, THIS HAPPENED\n"
+
 		#For each tile playable on anchorSquare
 		for child in currentNode.children:
 			if child in rack:
-				extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare)
+				rack.remove(child)
+				extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+				rack.append(child)
 
 		if limit > 0:
 			for child in currentNode.children:
 				if child in rack:
 					rack.remove(child)
-					leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], limit-1)
+					leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
 					rack.append(child)
 
-
-legalWords = []
+	#return legalWords
 
 #extendRightBeta notes-
 #The below function considers the situation at each step where:
@@ -237,56 +267,134 @@ legalWords = []
 #We are looking to add currentNode to the end of partialWord[:-1]
 #The validity of placing currentNode has already been checked (partialWord is some valid prefix)
 
-def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square):
+def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare):
 
 	#Case 1: At the board's edge. Play currentNode and check validity of partialWord.
 	if(square == 14):
 		if '{' in currentNode.children:
-			legalWords.append((partialWord, square))
+			colIdx = square - len(partialWord) + 1
+			legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx)))
 
 	#Case 2: Still looking to place more tiles on the board after this move if we can
 	else:
 		#Case 2.1: If square next to where we want to place letter on currentNode on is empty.
 		if(board[rowIdx][square+1].getChar() == '_'): 
 
-			#Play and check if partial word is legal.   
+			#Play and check if partial word is legal.
+
 			if '{' in currentNode.children:
-				legalWords.append((partialWord, square))
+				colIdx = square - len(partialWord) + 1
+				legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx) ))
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
 				if child in rack:  #and it can be legally placed on the next square.
+
 					rack.remove(child)
-					extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1)
+
+					extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
 					rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
 		else:
 			if board[rowIdx][square+1].getChar() in currentNode.children:
-				extendRightBeta(board, rowIdx, rack, partialWord + board[rowIdx][square+1].getChar(), currentNode.children[board[rowIdx][square+1].getChar()], square + 1)
+				extendRightBeta(board, rowIdx, rack, partialWord + board[rowIdx][square+1].getChar(), currentNode.children[board[rowIdx][square+1].getChar()], square + 1, legalWords, anchorSquare)
 
 
-# anchorSquare = 2
-# limit = 6
-# limit = min(limit, anchorSquare)
+def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit, legalWords):
 
-# findStart = datetime.datetime.now()
+	#Case 1: Above of anchor square occupied
+	if anchorSquare > 0:
+		if(board[anchorSquare-1][colIdx].getChar() != '_'):
 
-# leftPart('', newTrie.root, limit)
+			#print "THIS HAPPENED\n"
+			upSquare = anchorSquare-1
+			upBit = board[upSquare][colIdx].getChar()
 
-# #legalWords = list(set(legalWords))
+			#Construct the existing upPart
+			while(upSquare > 0):
 
-# findEnd = datetime.datetime.now()
+				if(board[upSquare-1][colIdx].getChar() == '_'):
+					break
 
-# #Time to generate all moves for one row
-# #print (findEnd - findStart).microseconds
+				upSquare = upSquare - 1
 
-# print sorted(legalWords)
+				upBit = board[upSquare][colIdx].getChar() + upBit
 
-# for word in legalWords:
-# 	if(newTrie.query(word[0]) == False):
-# 		print "Shit, ", word[0]
+			#Walk down the trie to node with upBit path. If it exists. 
+			for element in upBit:
+				if element in currentNode.children:
+					currentNode = currentNode.children[element]
+				else:
+					return
+
+			#For each tile playable on anchorSquare
+			for child in currentNode.children:
+				if child in rack:
+					rack.remove(child)
+					extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					rack.append(child)
+
+	#Case 2: Left of anchor square vacant
+	else:
+
+		##print "NO, THIS HAPPENED\n"
+
+		#For each tile playable on anchorSquare
+		for child in currentNode.children:
+			if child in rack:
+				rack.remove(child)
+				extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+				rack.append(child)
+
+		if limit > 0:
+			for child in currentNode.children:
+				if child in rack:
+					rack.remove(child)
+					upPart( board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
+					rack.append(child)
+
+	#return legalWords
+
+#extendRightBeta notes-
+#The below function considers the situation at each step where:
+#partialWord[:-1](partialWord without last letter) is already on the board
+#We are looking to add currentNode to the end of partialWord[:-1]
+#The validity of placing currentNode has already been checked (partialWord is some valid prefix)
+
+def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare):
+
+	#Case 1: At the board's edge. Play currentNode and check validity of partialWord.
+	if(square == 14):
+		if '{' in currentNode.children:
+			rowIdx = square - len(partialWord) + 1
+			legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare) ))
+
+	#Case 2: Still looking to place more tiles on the board after this move if we can
+	else:
+		#Case 2.1: If square next to where we want to place letter on currentNode on is empty.
+		if(board[square+1][colIdx].getChar() == '_'): 
+
+			#Play and check if partial word is legal.   
+			if '{' in currentNode.children:
+				rowIdx = square - len(partialWord) + 1
+				legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare) ))
+
+			#Find a candidate tile to play at the next square and call extendRight on it
+			for child in currentNode.children:
+				if child in rack:  #and it can be legally placed on the next square.
+					rack.remove(child)
+					extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
+					rack.append(child)
+
+		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
+		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
+		else:
+			if board[square+1][colIdx].getChar() in currentNode.children:
+				extendDownBeta(board, colIdx, rack, partialWord + board[square+1][colIdx].getChar(), currentNode.children[board[square+1][colIdx].getChar()], square + 1, legalWords, anchorSquare)
+
+
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
 
@@ -313,116 +421,129 @@ def getClashes(r, c, word, occupiedMatrix):
         #form word, wordListTrie.query(word)
 
 
-# def main():
 
-# 	ourBoard = TheBoard()
-# 	ourBoard.printBoard()
+#Below is a honorable sandbox to play with extendLeft and extendRightBeta
+def main():
 
-# 	playerRack = Rack()
-# 	computerRack = Rack()
+	ourBoard = TheBoard()
+	ourBoard.printBoard()
 
-# 	bag = [ letter for letter in allLetters ]
+	playerRack = Rack()
+	computerRack = Rack()
 
-# 	bag = playerRack.replenish(bag);
-# 	bag = computerRack.replenish(bag);
+	bag = [ letter for letter in allLetters ]
 
-# 	playerTurn = True
-# 	print "You get to move first! Here is your rack"
+	bag = playerRack.replenish(bag);
+	bag = computerRack.replenish(bag);
 
-# 	while(len(bag)):
+	playerTurn = True
+	print "You get to move first! Here is your rack"
 
-# 		bag = playerRack.replenish(bag);
-# 		playerRack.showRack()
-
-# 		while(playerTurn):
-
-# 			#User input.
-
-# 			print "Enter number of tiles you wanna play:"
-# 			wordLength = input()
-# 			print "Enter word:"
-# 			word = raw_input()
-# 			if not wordListTrie.query(word):
-# 				print "\nSorry, not a word. Try again.\n"
-# 				continue
-
-# 			print "Enter 'True' if across else 'False':"
-# 			isAcross = raw_input()
-# 			if(isAcross == 'True' or isAcross == 'true'):
-# 				isAcross = True
-# 			else:
-# 				isAcross = False
-
-# 			print "Enter 0-indexed start position(r c):"
-# 			start = map(int, raw_input().split())
-# 			r,c = start[0],start[1]
-
-# 			#Validity checking.
-# 			if(isAcross):
-# 				current = [ ourBoard.board[r][c+elem].getChar() for elem in range(len(word)) ]
-# 			else:
-# 				current = [ ourBoard.board[r+elem][c].getChar() for elem in range(len(word)) ]
-
-# 			valid = True
-# 			for letter in word:
-# 				if (letter not in current) and (letter not in [ t.letter for t in playerRack.rack ]):
-# 					print "Uh oh. Invalid move."
-# 					playerTurn = True 
-# 					valid = False
-# 					break
-
-# 			if not valid:
-# 				continue
-# 			else:
-# 				for letter in word:
-# 					if letter not in current:
-
-# 						tiles = [t.letter for t in playerRack.rack]
-
-# 						for idx, elem in enumerate(tiles):
-# 							if(tiles[idx] == letter):
-# 								playerRack.removeTile(idx)
-# 								break
-
-# 				playerMove(ourBoard, word, (c,r), isAcross)
-# 				checkClashes(r, c, occupiedMatrix)
-
-# 			playerTurn = False
-# 			ourBoard.printBoard()
-
-# 		while(not playerTurn):
-# 			#Add AI moves here
-
-# 			computerRack.showRack()
-
-# 			rack = [tile.letter for tile in computerRack.rack]
-# 			anchorSquare = 8
-# 			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, 7)
-
-# 			print legalWords[0]
-# 			playerMove(ourBoard,legalWords[0][0], (7,7), isAcross)
-
-# 			# for rowIdx, row in enumerate(ourBoard.board):
-# 			# 	flag = False
-# 			# 	for idx, sq in enumerate(row):
-# 			# 		prevAnchor = -1
-# 			# 		if sq.isAnchor:
-
-# 			# 			rack = [tile.letter for tile in computerRack.rack]
-# 			# 			limit = min(idx, idx-prevAnchor-1)
-# 			# 			anchorSquare = idx
-# 			# 			prevAnchor = anchorSquare
-# 			# 			del legalWords[:]
-# 			# 			print "Position:", rowIdx, idx
-# 			# 			print sorted(legalWords)
-# 			# 			#playerMove(ourBoard,legalWords[0], (rowIdx,idx), isAcross)
-# 			# 			flag = True
-# 			# 			break
-# 			# 	if(flag):
-# 			# 		break
+	while(len(bag)):
 
 
-# 			playerTurn = True
-		
-# if __name__ == '__main__':
-# 	main()
+
+		ourBoard.board[7][7].isAnchor = True
+
+
+		while(playerTurn):
+
+			#User input.
+
+			bag = playerRack.replenish(bag);
+
+			playerRack.showRack()
+
+
+			print "Enter number of tiles you wanna play:"
+			wordLength = input()
+			print "Enter word:"
+			word = raw_input()
+			if not wordListTrie.query(word):
+				print "\nSorry, not a word. Try again.\n"
+				continue
+
+			print "Enter 'True' if across else 'False':"
+			isAcross = raw_input()
+			if(isAcross == 'True' or isAcross == 'true'):
+				isAcross = True
+			else:
+				isAcross = False
+
+			print "Enter 0-indexed start position(r c):"
+			start = map(int, raw_input().split())
+			r,c = start[0],start[1]
+
+			#Validity checking.
+			current = validityCheck(isAcross, ourBoard, (c,r), word, playerRack)
+
+			if not current:
+				print "Try again."
+				continue
+			else:
+				playerRack = removeTiles(playerRack, current)
+				playerMove(ourBoard, word, (c,r), isAcross)
+				playerTurn = False
+				ourBoard.printBoard()
+
+		while(not playerTurn):
+			#Add AI moves here
+
+			bag = computerRack.replenish(bag);
+
+			computerRack.showRack()
+
+			# anchorSquare = 8
+			# legalWords = []
+			# leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, anchorSquare, 4, legalWords)
+			# print legalWords
+
+			#List of 3-tuples: (word, pos, isAcross)			
+			legalWords = []
+
+			#Generate all across moves
+			for rowIdx, row in enumerate(ourBoard.board):
+				for idx, sq in enumerate(row):
+					prevAnchor = -1
+					if sq.isAnchor:
+
+						limit = min(idx, idx-prevAnchor-1)
+						anchorSquare = idx
+						prevAnchor = anchorSquare
+
+						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+			#Generate all down moves
+			for colIdx in xrange(len(ourBoard.board)):
+				for rowIdx in xrange(len(ourBoard.board)):
+					prevAnchor = -1
+					sq = ourBoard.board[rowIdx][colIdx]
+					if sq.isAnchor:
+
+						limit = min(rowIdx, rowIdx-prevAnchor-1)
+						anchorSquare = rowIdx
+						prevAnchor = anchorSquare
+
+						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+	
+
+			random.shuffle(legalWords)
+
+			if(len(legalWords)):
+				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
+
+				if not current:
+					print "Try again."
+					continue
+				else:
+					computerRack = removeTiles(computerRack, current)
+					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
+					playerTurn = True
+					ourBoard.printBoard()
+
+			else:
+				playerTurn = True
+				continue
+			
+if __name__ == '__main__':
+	main()

@@ -149,11 +149,12 @@ def run_game():
 				continue
 			elif(motion[0] == "Shuffle"): #If Users asks for shuffle
 				playerRack = removeTiles(playerRack, motion[1])
-				playerRack.showRack()
 				print "Shuffle Success!\n\n"
 				playerTurn = False
-				bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
+				bag = playerRack.replenish(bag) #Replenish Player's Rack after shuffle
 				displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
+				playerRack.showRack()
+
 				bag += [x for x in motion[1]]
 				display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 				time.sleep(2)
@@ -162,7 +163,6 @@ def run_game():
 			else: #If Info is legit, try playing the word
 				#Check for valid move here
 				current = validityCheck(motion[3], ourBoard, motion[2], motion[1], playerRack)
-				#print current, "FUCK"
 
 				if not (current):
 					print "Error. Invalid Move.\n\n"
@@ -177,23 +177,102 @@ def run_game():
 					print "Move Success!\n\n"
 					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(2)
-					#removeTiles #Remove Tiles from player's rack
 					#current = motion[1]
+
+					print "Before player move:"
+					playerRack.showRack()
 					playerRack = removeTiles(playerRack, current)
 					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #Play the move on offline board
-					ourBoard.printBoard() #DisplayBoard
 					for x in motion[1]:
 						scorePlayer += Tile(x).getVal() #Increase score
 					playerTurn = False #Change turn to Computer
 					bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
 					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
+					print "After player move:"
+					playerRack.showRack()
+					ourBoard.printBoard() #DisplayBoard
+
+
 		else: #AI
 			print "Computer is thinking it's move!\n\n\n"
 			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
 			time.sleep(3)
-			playerTurn = True
-			displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+
+			print "WTF"
+			rack = [tile.letter for tile in computerRack.rack]
+
+			#List of 3-tuples: (word, pos, isAcross)			
+			legalWords = []
+
+			#Generate all across moves
+			for rowIdx, row in enumerate(ourBoard.board):
+				for idx, sq in enumerate(row):
+					prevAnchor = -1
+					if sq.isAnchor:
+
+						limit = min(idx, idx-prevAnchor-1)
+						anchorSquare = idx
+						prevAnchor = anchorSquare
+
+						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+			#Generate all down moves
+			for colIdx in xrange(len(ourBoard.board)):
+				for rowIdx in xrange(len(ourBoard.board)):
+					prevAnchor = -1
+					sq = ourBoard.board[rowIdx][colIdx]
+					if sq.isAnchor:
+
+						limit = min(rowIdx, rowIdx-prevAnchor-1)
+						anchorSquare = rowIdx
+						prevAnchor = anchorSquare
+
+						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+	
+
+			random.shuffle(legalWords)
+
+			if(len(legalWords)):
+
+				print legalWords[0][3]
+				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
+
+				if not current:
+					print "Try again."
+					continue
+				else:
+
+					renderWord(legalWords[0][0], legalWords[0][1], boardRectangles, legalWords[0][2], BOARD, ourBoard)
+					FIRSTHALF.blit(BOARD, (19,19))
+					SCREEN.blit(FIRSTHALF,(0,0))
+					pygame.display.flip()
+					print "Move Success!\n\n"
+					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					time.sleep(1)
+
+					print "Before Computer Move:"
+					computerRack.showRack()
+
+					computerRack = removeTiles(computerRack, current)
+					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
+					playerTurn = True
+					bag = computerRack.replenish(bag);
+
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+					print "After Computer Move:"
+					computerRack.showRack()
+
+					ourBoard.printBoard()
+
+
+			else:
+				playerTurn = True
+				continue
+
+
+
+
 		pygame.display.flip()
 
 def main():

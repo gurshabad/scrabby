@@ -9,6 +9,7 @@ def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, B
 	pos_r = sanitizedPosition[0]
 	pos_c = sanitizedPosition[1]
 
+	#wordPlayed = wordPlayed.upper()
 	print pos_r, pos_c
 	print len(wordPlayed)
 
@@ -175,7 +176,7 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 						playHorizontal = playHorizontal[0]
 						if playHorizontal == 'Y': print "Horizontal? Y"; playHorizontal = True
 						else: print "Horizontal? N"; playHorizontal = False
-						return ("Move", wordPlayed, sanitizedPos, playHorizontal)
+						return ("Move", wordPlayed.lower(), sanitizedPos, playHorizontal)
 				else:
 					print "Position? " + positionPlayed + " - Invalid Position!"
 					SECONDHALF.blit(FONT.render("Invalid Position! TRY AGAIN!", 1, (255,0,0)), ((SECONDHALF.get_width() / 2) - 200, (SECONDHALF.get_height() / 2) + 170))
@@ -201,11 +202,11 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 def removeTiles(playerRack, letters):
 	print letters
 	for x in letters:
-		tiles = [t.letter.upper() for t in playerRack.rack]
+		tiles = [t.letter for t in playerRack.rack]
 		for idx, elem in enumerate(tiles):
 			if(tiles[idx] == x):
 				print "Found "+x+" and deleting it"
 				playerRack.removeTile(idx)
 				break
-	playerRack.showRack()
+	#playerRack.showRack()
 	return playerRack

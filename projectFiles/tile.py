@@ -1,7 +1,7 @@
 class Tile:
 
 	def __init__(self, l = '_'):
-		self.letter = l
+		self.letter = l.lower()
 		self.value = self.setVal(l)
 
 	def getVal(self):

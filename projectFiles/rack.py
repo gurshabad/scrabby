@@ -41,4 +41,12 @@ class Rack:
 		del self.rack[idx]
 		self.numOfTiles -= 1 
 
+	def clearRack(self):
+		del self.rack[:]
+		self.numOfTiles = 0
+
+	def addTile(self, tile):
+		self.rack.append(tile)
+		self.numOfTiles += 1
+
 
