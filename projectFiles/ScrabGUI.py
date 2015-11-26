@@ -222,12 +222,12 @@ def run_game():
 					prevAnchor = -1
 					if sq.isAnchor:
 
-						print rowIdx, idx
+						#print rowIdx, idx
 						limit = min(idx, idx-prevAnchor-1)
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						print "Going in", rowIdx, anchorSquare, limit
+						#print "Going in", rowIdx, anchorSquare, limit
 						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
 			#Generate all down moves

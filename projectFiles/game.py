@@ -549,11 +549,23 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 			#print "NO, THIS HAPPENED\n"
 
 			#For each tile playable on anchorSquare
+
+			#print partialWord, limit
+
+			pStart = anchorSquare - len(partialWord)
+
+			for i, letter in enumerate(partialWord):
+				if board[rowIdx][pStart+i].acrossCrossCheck[ord(letter)-ord('a')] == False:
+					return 
+
+			#print partialWord, limit, "survived!"
+
 			for child in currentNode.children:
-				if child in rack and board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
-					rack.remove(child)
-					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
-					rack.append(child)
+				if child in rack: 
+					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove(child)
+						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						rack.append(child)
 
 			if limit > 0:
 				for child in currentNode.children:
@@ -563,10 +575,11 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 						rack.append(child)
 	else:
 		for child in currentNode.children:
-			if child in rack and board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
-				rack.remove(child)
-				extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
-				rack.append(child)
+			if child in rack:
+				if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+					rack.remove(child)
+					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					rack.append(child)
 
 	#return legalWords
 
@@ -597,10 +610,11 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legal
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
-				if child in rack and board[rowIdx][square+1].acrossCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
-					rack.remove(child)
-					extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
-					rack.append(child)
+				if child in rack:
+					if board[rowIdx][square+1].acrossCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
+						rack.remove(child)
+						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
+						rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
@@ -638,22 +652,36 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 
 			#For each tile playable on anchorSquare
 			for child in currentNode.children:
-				if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
-					rack.remove(child)
-					extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
-					rack.append(child)
+				if child in rack: 
+					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove(child)
+						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						rack.append(child)
 
 		#Case 2: Left of anchor square vacant
 		else:
 
 			##print "NO, THIS HAPPENED\n"
 
+
+			#print partialWord, limit
+
+			pStart = anchorSquare - len(partialWord)
+
+			for i, letter in enumerate(partialWord):
+				if board[pStart+i][colIdx].downCrossCheck[ord(letter)-ord('a')] == False:
+					return 
+
+			#print partialWord, limit, "survived!"
+
+
 			#For each tile playable on anchorSquare
 			for child in currentNode.children:
-				if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
-					rack.remove(child)
-					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
-					rack.append(child)
+				if child in rack:
+					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove(child)
+						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						rack.append(child)
 
 			if limit > 0:
 				for child in currentNode.children:
@@ -665,10 +693,11 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 	else:
 
 		for child in currentNode.children:
-			if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
-				rack.remove(child)
-				extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
-				rack.append(child)
+			if child in rack:
+				if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+					rack.remove(child)
+					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					rack.append(child)
 
 	#return legalWords
 
@@ -698,10 +727,11 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
-				if child in rack and board[square+1][colIdx].downCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
-					rack.remove(child)
-					extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
-					rack.append(child)
+				if child in rack:
+					if board[square+1][colIdx].downCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
+						rack.remove(child)
+						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
+						rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
@@ -817,7 +847,7 @@ def main():
 
 			rack = [ i.letter for i in computerRack.rack]
 
-			anchorSquare = 8
+			anchorSquare = 6
 			legalWords = []
 			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, anchorSquare, 4, legalWords)
 
