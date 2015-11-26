@@ -150,6 +150,7 @@ def run_game():
 			if(motion == False): #If Info is not legit, continue
 				continue
 			elif(motion[0] == "Shuffle"): #If Users asks for shuffle
+				print motion[1]
 				playerRack = removeTiles(playerRack, motion[1])
 				print "Shuffle Success!\n\n"
 				playerTurn = False
@@ -218,10 +219,12 @@ def run_game():
 					prevAnchor = -1
 					if sq.isAnchor:
 
+						print rowIdx, idx
 						limit = min(idx, idx-prevAnchor-1)
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
+						print "Going in", rowIdx, anchorSquare, limit
 						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
 			#Generate all down moves

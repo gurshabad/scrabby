@@ -215,6 +215,9 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]][pos[0]+loc].setTile(Tile(letter))
 
+			print board.board[pos[1]][pos[0]+loc].getChar(), pos[1], pos[0]+loc, board.board[pos[1]][pos[0]+loc].isAnchor
+
+
 	else:
 
 		if not pos[1] == 0:
@@ -235,6 +238,7 @@ def playerMove(board, word, pos, isAcross):
 			board.board[pos[1]+loc][pos[0]].isAnchor = False
 
 			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
+			print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
 
 
 #This function calculates the score of a move after it has been played
@@ -502,6 +506,8 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 
 	#Case 1: Left of anchor square occupied
 
+	#print "wtf\n"
+
 	if anchorSquare > 0:
 		if(board[rowIdx][anchorSquare-1].getChar() != '_'):
 
@@ -537,24 +543,30 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 						rack.append(child)
 
-	#Case 2: Left of anchor square vacant
+		#Case 2: Left of anchor square vacant
+		else:
+
+			#print "NO, THIS HAPPENED\n"
+
+			#For each tile playable on anchorSquare
+			for child in currentNode.children:
+				if child in rack and board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+					rack.remove(child)
+					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					rack.append(child)
+
+			if limit > 0:
+				for child in currentNode.children:
+					if child in rack:
+						rack.remove(child)
+						leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
+						rack.append(child)
 	else:
-
-		##print "NO, THIS HAPPENED\n"
-
-		#For each tile playable on anchorSquare
 		for child in currentNode.children:
 			if child in rack and board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 				rack.remove(child)
 				extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 				rack.append(child)
-
-		if limit > 0:
-			for child in currentNode.children:
-				if child in rack:
-					rack.remove(child)
-					leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
-					rack.append(child)
 
 	#return legalWords
 
@@ -631,24 +643,32 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 					extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 					rack.append(child)
 
-	#Case 2: Left of anchor square vacant
+		#Case 2: Left of anchor square vacant
+		else:
+
+			##print "NO, THIS HAPPENED\n"
+
+			#For each tile playable on anchorSquare
+			for child in currentNode.children:
+				if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+					rack.remove(child)
+					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					rack.append(child)
+
+			if limit > 0:
+				for child in currentNode.children:
+					if child in rack:
+						rack.remove(child)
+						upperPart( board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
+						rack.append(child)
+
 	else:
 
-		##print "NO, THIS HAPPENED\n"
-
-		#For each tile playable on anchorSquare
 		for child in currentNode.children:
 			if child in rack and board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 				rack.remove(child)
 				extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
 				rack.append(child)
-
-		if limit > 0:
-			for child in currentNode.children:
-				if child in rack:
-					rack.remove(child)
-					upPart( board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
-					rack.append(child)
 
 	#return legalWords
 

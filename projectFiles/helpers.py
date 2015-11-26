@@ -139,7 +139,7 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 
 			shuffleLetters = ask(SCREEN, SECONDHALF, "LETTERS:")
 			if(verifyShuffle(shuffleLetters, playerRack)):
-				return ("Shuffle", shuffleLetters)
+				return ("Shuffle", shuffleLetters.lower())
 
 			else:
 				print "Shuffle-Letters: INCORRECT"
