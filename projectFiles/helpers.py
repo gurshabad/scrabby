@@ -6,8 +6,8 @@ from trie import *
 from inputbox import *
 
 def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard):
-	pos_r = sanitizedPosition[0]
-	pos_c = sanitizedPosition[1]
+	pos_r = sanitizedPosition[1]
+	pos_c = sanitizedPosition[0]
 
 	wordPlayed = wordPlayed.upper()
 	print pos_r, pos_c
@@ -15,10 +15,10 @@ def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, B
 
 	if(playHorizontal):
 		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_r+idx][pos_c], BOARD)
+			renderTile(x, boardRectangles[pos_c + idx][pos_r], BOARD)
 	else:
 		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_r][pos_c+idx], BOARD)
+			renderTile(x, boardRectangles[pos_c][pos_r + idx ], BOARD)
 	return True
 
 def renderTile(letter2play, square, BOARD):

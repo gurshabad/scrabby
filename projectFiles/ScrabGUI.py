@@ -136,12 +136,15 @@ def run_game():
 	#-----------------------------------------
 	#Main Loop
 
+	firstMoveFlag = True
+
 	while True and len(bag):
 		
 		#------------------------------------
 		#Detect Events
 
-		ourBoard.board[7][7].isAnchor = True
+		if(firstMoveFlag):
+			ourBoard.board[7][7].isAnchor = True
 
 		if(playerTurn):
 
@@ -284,7 +287,7 @@ def run_game():
 
 
 
-
+		firstMoveFlag = False
 		pygame.display.flip()
 
 def main():
