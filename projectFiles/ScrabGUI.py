@@ -184,9 +184,14 @@ def run_game():
 					print "Before player move:"
 					playerRack.showRack()
 					playerRack = removeTiles(playerRack, current)
+
+					#need to call scoreThisMove before playerMove function is called because the latter sets tile to occupied
+					scorePlayer += scoreThisMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #calculate score of the move
 					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #Play the move on offline board
-					for x in motion[1]:
-						scorePlayer += Tile(x).getVal() #Increase score
+					
+					# old lines to calculate score
+					# for x in motion[1]:
+					# 	scorePlayer += Tile(x).getVal()
 					playerTurn = False #Change turn to Computer
 					bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores

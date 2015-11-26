@@ -28,6 +28,9 @@ class Square:
 		self.tile = val
 		self.occupied = True
 
+	def setTileVal(self, val):
+		self.tile = val
+
 	def getChar(self):
 		return self.tile.letter
 

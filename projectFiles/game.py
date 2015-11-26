@@ -188,6 +188,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	return ''.join(deleteThis)
 
 
+
 #The following function just sets the tiles in the backend board and sets adjacent squares to Anchor 
 def playerMove(board, word, pos, isAcross):
 
@@ -234,6 +235,209 @@ def playerMove(board, word, pos, isAcross):
 			board.board[pos[1]+loc][pos[0]].isAnchor = False
 
 			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
+
+
+#This function calculates the score of a move after it has been played
+def scoreThisMove(board, word, pos, isAcross):
+	r = pos[1]
+	c = pos[0]
+	#Get relevant space
+
+	if(isAcross):
+		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
+
+	else:
+		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
+
+	for i in range(len(word)):
+		if current[i].getChar() == '_':
+			current[i].setTileVal(Tile(word[i]))
+
+	""" Tile special codes for reference
+	0 - Nothing Special
+	1 - Double Letter(DL)
+	2 - Triple Letter(TL)
+	3 - Double Word(DW)
+	4 - Triple Word(TW)
+	"""
+	finalScore = 0
+
+	if(isAcross):
+		#check for bingo
+		tileCount = 0
+		for tile in current:
+			if not tile.occupied:
+				tileCount += 1
+		if tileCount == 7:
+			finalScore += 50
+
+		#calculate score for the main word formed
+		mainWordScore = 0
+		numDW = 0 #number of double word premium tiles
+		numTW = 0 #number of triple word premium tiles
+		for t in current:
+			if t.occupied:
+				mainWordScore += t.tile.getVal()
+			else:
+				if t.special == 0:
+					mainWordScore += t.tile.getVal()
+				elif t.special == 1:
+					mainWordScore += 2 * t.tile.getVal()
+				elif t.special == 2:
+					mainWordScore += 3 * t.tile.getVal()
+				elif t.special == 3:
+					mainWordScore += t.tile.getVal()
+					numDW += 1
+				elif t.special == 4:
+					mainWordScore += t.tile.getVal()
+					numTW += 1
+
+		if numDW > 0:
+			mainWordScore *= numDW * 2
+		if numTW > 0:
+			mainWordScore *= numTW * 3
+
+		finalScore += mainWordScore
+
+		#calculate score for words that are made up and down
+		for colno in range(c, c+len(word)):
+			upFlag = False
+			downFlag = False
+			if r > 0:
+				if (board.board[r-1][colno].occupied):
+					upFlag = True
+			if r < 14:
+				if (board.board[r+1][colno].occupied):
+					downFlag = True
+
+			#check next column if no word formed here
+			if not upFlag and not downFlag:
+				continue
+
+			upStart = r
+			downStart = r
+
+			if upFlag:
+				while board.board[upStart-1][colno].occupied:
+					upStart -= 1
+					if upStart == 0:
+						break
+
+			if downFlag:
+				while board.board[downStart+1][colno].occupied:
+					downStart += 1
+					if downStart == 15:
+						break
+
+			#start scoring word
+			wordScore = 0
+			if board.board[r][colno].special == 1:
+				wordScore += 2 * board.board[r][colno].tile.getVal()
+			if board.board[r][colno].special == 2:
+				wordScore += 3 * board.board[r][colno].tile.getVal()
+
+			currentWordSquares = [ board.board[elem][colno] for elem in range(upStart, downStart+1)]
+			for currentSquare in currentWordSquares:
+				if currentSquare.occupied:
+					wordScore += currentSquare.tile.getVal()
+
+			if board.board[r][colno].special == 3:
+				wordScore = 2 * wordScore
+
+			if board.board[r][colno].special == 4:
+				wordScore = 3 * wordScore
+
+			finalScore += wordScore
+
+	else:
+		#check for bingo
+		tileCount = 0
+		for tile in current:
+			if not tile.occupied:
+				tileCount += 1
+		if tileCount == 7:
+			finalScore += 50
+
+		#calculate score for the main word formed
+		mainWordScore = 0
+		numDW = 0 #number of double word premium tiles
+		numTW = 0 #number of triple word premium tiles
+		for t in current:
+			if t.occupied:
+				mainWordScore += t.tile.getVal()
+			else:
+				if t.special == 0:
+					mainWordScore += t.tile.getVal()
+				elif t.special == 1:
+					mainWordScore += 2 * t.tile.getVal()
+				elif t.special == 2:
+					mainWordScore += 3 * t.tile.getVal()
+				elif t.special == 3:
+					mainWordScore += t.tile.getVal()
+					numDW += 1
+				elif t.special == 4:
+					mainWordScore += t.tile.getVal()
+					numTW += 1
+
+		if numDW > 0:
+			mainWordScore *= numDW * 2
+		if numTW > 0:
+			mainWordScore *= numTW * 3
+
+		finalScore += mainWordScore
+
+		#calculate score for words that are made left and right
+		for rowno in range(r, r+len(word)):
+			leftFlag = False
+			rightFlag = False
+			if c > 0:
+				if (board.board[rowno][c-1].occupied):
+					leftFlag = True
+			if r < 14:
+				if (board.board[rowno][c+1].occupied):
+					rightFlag = True
+
+			#check next row if no word formed here
+			if not leftFlag and not rightFlag:
+				continue
+
+			leftStart = c
+			rightStart = c
+
+			if leftFlag:
+				while board.board[rowno][leftStart-1].occupied:
+					leftStart -= 1
+					if leftStart == 0:
+						break
+
+			if rightFlag:
+				while board.board[rowno][rightStart+1].occupied:
+					rightStart += 1
+					if rightStart == 15:
+						break
+
+			#start scoring word
+			wordScore = 0
+			if board.board[rowno][c].special == 1:
+				wordScore += 2 * board.board[rowno][c].tile.getVal()
+			if board.board[rowno][c].special == 2:
+				wordScore += 3 * board.board[rowno][c].tile.getVal()
+
+			currentWordSquares = [ board.board[rowno][elem] for elem in range(leftStart, rightStart+1)]
+			for currentSquare in currentWordSquares:
+				if currentSquare.occupied:
+					wordScore += currentSquare.tile.getVal()
+
+			if board.board[rowno][c].special == 3:
+				wordScore = 2 * wordScore
+
+			if board.board[rowno][c].special == 4:
+				wordScore = 3 * wordScore
+
+			finalScore += wordScore
+
+	print "Final score calculated: ", finalScore
+	return finalScore
 
 
 import string, random
