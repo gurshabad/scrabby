@@ -442,7 +442,7 @@ def scoreThisMove(board, word, pos, isAcross):
 
 				finalScore += wordScore
 
-	print "Final score calculated: ", finalScore
+	#print "Final score calculated: ", finalScore
 	return finalScore
 
 

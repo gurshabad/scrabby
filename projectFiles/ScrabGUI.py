@@ -6,6 +6,7 @@ from trie import *
 from inputbox import *
 from helpers import *
 from game import *
+from copy import deepcopy
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
 
@@ -246,19 +247,28 @@ def run_game():
 
 			random.shuffle(legalWords)
 
-			print legalWords
-
 			if(len(legalWords)):
 
-				print legalWords[0][3]
-				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
+				maxScore = scoreThisMove(deepcopy(ourBoard), legalWords[0][0], legalWords[0][1], legalWords[0][2] )
+				maxIdx = 0
+
+				for i in xrange(1,len(legalWords)):
+					currentScore = scoreThisMove(deepcopy(ourBoard), legalWords[i][0], legalWords[i][1], legalWords[i][2] )
+					if currentScore > maxScore:
+						maxScore = currentScore
+						maxIdx = i
+
+				print legalWords[maxIdx][0], maxScore
+
+				print legalWords[maxIdx][3]
+				current = validityCheck(legalWords[maxIdx][2], ourBoard, legalWords[maxIdx][1], legalWords[maxIdx][0], computerRack)
 
 				if not current:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(legalWords[0][0], legalWords[0][1], boardRectangles, legalWords[0][2], BOARD, ourBoard)
+					renderWord(legalWords[maxIdx][0], legalWords[maxIdx][1], boardRectangles, legalWords[maxIdx][2], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -270,7 +280,10 @@ def run_game():
 					computerRack.showRack()
 
 					computerRack = removeTiles(computerRack, current)
-					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
+
+					scoreComputer += scoreThisMove(ourBoard, legalWords[maxIdx][0], legalWords[maxIdx][1], legalWords[maxIdx][2] )
+					playerMove(ourBoard,legalWords[maxIdx][0], legalWords[maxIdx][1], legalWords[maxIdx][2])
+
 					playerTurn = True
 					bag = computerRack.replenish(bag);
 
