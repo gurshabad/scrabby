@@ -331,7 +331,7 @@ def scoreThisMove(board, word, pos, isAcross):
 				if downFlag and downStart < 14:
 					while board.board[downStart+1][colno].occupied:
 						downStart += 1
-						if downStart == 15:
+						if downStart == 14:
 							break
 
 				#start scoring word
@@ -349,7 +349,7 @@ def scoreThisMove(board, word, pos, isAcross):
 				if board.board[r][colno].special == 3:
 					wordScore = 2 * wordScore
 
-				if board.board[r][colno].special == 4:s
+				if board.board[r][colno].special == 4:
 					wordScore = 3 * wordScore
 
 				finalScore += wordScore
@@ -419,7 +419,7 @@ def scoreThisMove(board, word, pos, isAcross):
 				if rightFlag and rightStart < 14:
 					while board.board[rowno][rightStart+1].occupied:
 						rightStart += 1
-						if rightStart == 15:
+						if rightStart == 14:
 							break
 
 				#start scoring word

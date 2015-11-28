@@ -38,6 +38,7 @@ def renderRackTile(letter, score, square, SECONDHALF):
 def sanitizePosition(pos):
 	if(len(pos) > 4): return False
 	if(not pos[0].isalpha()):
+		if(not pos[-1].isalpha()): return False
 		x = ord(pos[-1]) - ord('A')
 		pos = pos[:-1]
 		pos.strip(" ")
@@ -46,6 +47,7 @@ def sanitizePosition(pos):
 			return (x,y)
 		else: return False
 	else:
+		if(pos[-1].isalpha()): return False
 		x = ord(pos[0]) - ord('A')
 		pos = pos[1:]
 		pos.strip(" ")
