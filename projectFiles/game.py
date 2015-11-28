@@ -322,13 +322,13 @@ def scoreThisMove(board, word, pos, isAcross):
 				upStart = r
 				downStart = r
 
-				if upFlag:
+				if upFlag and upStart > 0:
 					while board.board[upStart-1][colno].occupied:
 						upStart -= 1
 						if upStart == 0:
 							break
 
-				if downFlag:
+				if downFlag and downStart < 14:
 					while board.board[downStart+1][colno].occupied:
 						downStart += 1
 						if downStart == 15:
@@ -349,7 +349,7 @@ def scoreThisMove(board, word, pos, isAcross):
 				if board.board[r][colno].special == 3:
 					wordScore = 2 * wordScore
 
-				if board.board[r][colno].special == 4:
+				if board.board[r][colno].special == 4:s
 					wordScore = 3 * wordScore
 
 				finalScore += wordScore
@@ -410,13 +410,13 @@ def scoreThisMove(board, word, pos, isAcross):
 				leftStart = c
 				rightStart = c
 
-				if leftFlag:
+				if leftFlag and leftStart > 0:
 					while board.board[rowno][leftStart-1].occupied:
 						leftStart -= 1
 						if leftStart == 0:
 							break
 
-				if rightFlag:
+				if rightFlag and rightStart < 14:
 					while board.board[rowno][rightStart+1].occupied:
 						rightStart += 1
 						if rightStart == 15:
