@@ -158,7 +158,6 @@ def run_game():
 		if(playerTurn):
 
 			setCrossCheckBits(ourBoard, wordListTrie)
-			#computeCrossSums(ourBoard)	
 
 			motion = getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack) #Get Info from Player
 			if(motion == False): #If Info is not legit, continue
@@ -204,9 +203,6 @@ def run_game():
 					scorePlayer += scoreThisMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #calculate score of the move
 					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #Play the move on offline board
 					
-					# old lines to calculate score
-					# for x in motion[1]:
-					# 	scorePlayer += Tile(x).getVal()
 					playerTurn = False #Change turn to Computer
 					bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
@@ -224,7 +220,6 @@ def run_game():
 			crossStart = datetime.datetime.now()
 
 			setCrossCheckBits(ourBoard, wordListTrie)
-			#computeCrossSums(ourBoard)	
 
 			crossEnd = datetime.datetime.now()
 
@@ -235,7 +230,6 @@ def run_game():
 
 
 			genStart = datetime.datetime.now()
-
 
 			rack = [tile.letter for tile in computerRack.rack]
 
@@ -249,12 +243,10 @@ def run_game():
 				for idx, sq in enumerate(row):
 					if sq.isAnchor:
 
-						#print rowIdx, idx
 						limit = min(idx, idx-prevAnchor-1)
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						#print "Going in", rowIdx, anchorSquare, limit
 						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
 			#Generate all down moves
@@ -266,9 +258,6 @@ def run_game():
 					if sq.isAnchor:
 
 						limit = min(rowIdx, rowIdx-prevAnchor-1)
-
-						#print colIdx, rowIdx, limit, prevAnchor
-
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
@@ -289,7 +278,6 @@ def run_game():
 					wordsWithScores[legalWords[i]] = currentScore
 
 				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1], reverse = True)) #sorted dictionary
-				#print wordsWithScores
 
 				i = 0
 				for k in wordsWithScores: 
@@ -327,7 +315,7 @@ def run_game():
 					scoreComputer += wordsWithScores[legalWords[0]]
 					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
 
-					playerTurn = True
+					#playerTurn = True
 					bag = computerRack.replenish(bag);
 
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
@@ -338,7 +326,7 @@ def run_game():
 
 
 			else:
-				playerTurn = True
+				#playerTurn = True
 				continue
 
 			moveEnd = datetime.datetime.now()

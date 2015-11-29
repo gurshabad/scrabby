@@ -12,8 +12,8 @@ from trie import *
 from helpers import *
 from copy import deepcopy
 import random
-#For benchmarking:
 
+#For benchmarking:
 def memory_usage():
     """Memory usage of the current process in kilobytes."""
     status = None
@@ -36,7 +36,7 @@ def memory_usage():
 
 def setCrossCheckBits(board, wordList):
 
-	#Set acrossCrossCheck Bits
+	#Set acrossCrossCheck Bits and compute downSum
 
 	for i in xrange(15):
 		for j in xrange(15):
@@ -79,7 +79,7 @@ def setCrossCheckBits(board, wordList):
 
 			board.board[i][j].downSum = partialScore
 
-	#Set downCrossCheck Bits
+	#Set downCrossCheck Bits and compute acrossSum
 
 	for i in xrange(15):
 		for j in xrange(15):
@@ -117,64 +117,6 @@ def setCrossCheckBits(board, wordList):
 						board.board[i][j].downCrossCheck[letNo] = True
 					else:
 						board.board[i][j].downCrossCheck[letNo] = False
-
-			board.board[i][j].acrossSum = partialScore
-
-
-def computeCrossSums(board):
-
-	#Set down sum
-
-	for i in xrange(15):
-		for j in xrange(15):
-
-			partialScore = 0
-
-			if(i < 14):
-				if(board.board[i+1][j].occupied):
-
-					k=1
-					while(board.board[i+k][j].occupied):
-						partialScore += board.board[i+k][j].tile.getVal()
-						k += 1
-						if(i+k>14):
-							break
-			if(i > 0):
-				if(board.board[i-1][j].occupied):
-
-					k=1
-					while(board.board[i-k][j].occupied):
-						partialScore += board.board[i-k][j].tile.getVal()
-						k += 1
-						if(i-k<0):
-							break
-			board.board[i][j].downSum = partialScore
-
-	#Set across sum
-
-	for i in xrange(15):
-		for j in xrange(15):
-
-			partialScore = 0
-
-			if(j < 14):
-				if(board.board[i][j+1].occupied):
-
-					k=1
-					while(board.board[i][j+k].occupied):
-						partialScore += board.board[i][j+k].tile.getVal()
-						k += 1
-						if(j+k>14):
-							break
-			if(j > 0):
-				if(board.board[i][j-1].occupied):
-
-					k=1
-					while(board.board[i][j-k].occupied):
-						partialScore += board.board[i][j-k].tile.getVal()
-						k += 1
-						if(j-k<0):
-							break
 
 			board.board[i][j].acrossSum = partialScore
 
@@ -598,14 +540,11 @@ trieEnd = datetime.datetime.now()
 
 def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit, legalWords):
 
-	#Case 1: Left of anchor square occupied
-
-	#print "wtf\n"
-
 	if anchorSquare > 0:
+
+		#Case 1: Left of anchor square occupied
 		if(board[rowIdx][anchorSquare-1].getChar() != '_'):
 
-			#print "THIS HAPPENED\n"
 			leftSquare = anchorSquare-1
 			leftBit = board[rowIdx][leftSquare].getChar()
 
@@ -620,18 +559,16 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 				leftBit = board[rowIdx][leftSquare].getChar() + leftBit
 
 			#Walk down the trie to node with leftBit path
-
 			for element in leftBit:
 				if element in currentNode.children:
 					currentNode = currentNode.children[element]
 				else:
-					return
+					return #if it is not in trie then quit. 
 
 			#For each tile playable on anchorSquare
 
 			for child in currentNode.children:
 				if child in rack:
-					#print "HEREIAM", board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')]
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
 						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
@@ -640,20 +577,15 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 		#Case 2: Left of anchor square vacant
 		else:
 
-			#print "NO, THIS HAPPENED\n"
-
-			#For each tile playable on anchorSquare
-
-			#print partialWord, limit
-
+			#Check if partial word formed so far can be placed to the left.
 			pStart = anchorSquare - len(partialWord)
-
 			for i, letter in enumerate(partialWord):
 				if board[rowIdx][pStart+i].acrossCrossCheck[ord(letter)-ord('a')] == False:
 					return 
 
 			#print partialWord, limit, "survived!"
 
+			#For each tile playable on anchorSquare
 			for child in currentNode.children:
 				if child in rack: 
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
@@ -661,12 +593,15 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, limit)
 						rack.append(child)
 
+			#If we can create even more leftParts
 			if limit > 0:
 				for child in currentNode.children:
 					if child in rack:
 						rack.remove(child)
 						leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
 						rack.append(child)
+
+	#Case 3: Nothing to the left of anchor square.
 	else:
 		for child in currentNode.children:
 			if child in rack:
@@ -674,8 +609,6 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 					rack.remove(child)
 					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 					rack.append(child)
-
-	#return legalWords
 
 #extendRightBeta notes-
 #The below function considers the situation at each step where:
@@ -720,11 +653,11 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legal
 
 def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit, legalWords):
 
-	#Case 1: Above of anchor square occupied
 	if anchorSquare > 0:
+
+		#Case 1: Above of anchor square occupied
 		if(board[anchorSquare-1][colIdx].getChar() != '_'):
 
-			#print "THIS HAPPENED\n"
 			upSquare = anchorSquare-1
 			upBit = board[upSquare][colIdx].getChar()
 
@@ -753,22 +686,16 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 						rack.append(child)
 
-		#Case 2: Left of anchor square vacant
+		#Case 2: Above of anchor square vacant
 		else:
 
-			##print "NO, THIS HAPPENED\n"
-
-
-			#print partialWord, limit
-
+			#Check if partialWord formed so far can be placed above
 			pStart = anchorSquare - len(partialWord)
-
 			for i, letter in enumerate(partialWord):
 				if board[pStart+i][colIdx].downCrossCheck[ord(letter)-ord('a')] == False:
 					return 
 
 			#print partialWord, limit, "survived!"
-
 
 			#For each tile playable on anchorSquare
 			for child in currentNode.children:
@@ -794,7 +721,6 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 					rack.append(child)
 
-	#return legalWords
 
 #extendRightBeta notes-
 #The below function considers the situation at each step where:
@@ -859,7 +785,6 @@ def getClashes(r, c, word, occupiedMatrix):
                         down = down - 1
 
         #form word, wordListTrie.query(word)
-
 
 
 #Below is a honorable sandbox to play with extendLeft and extendRightBeta
