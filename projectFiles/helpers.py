@@ -207,7 +207,7 @@ def removeTiles(playerRack, letters):
 		tiles = [t.letter for t in playerRack.rack]
 		for idx, elem in enumerate(tiles):
 			if(tiles[idx] == x):
-				print "Found "+x+" and deleting it"
+				#print "Found "+x+" and deleting it"
 				playerRack.removeTile(idx)
 				break
 	#playerRack.showRack()

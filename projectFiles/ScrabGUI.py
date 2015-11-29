@@ -1,4 +1,5 @@
-import sys, pygame, time
+import sys, pygame, time, datetime
+import numpy as np
 from gen_board import *
 from tile import *
 from rack import *
@@ -30,6 +31,7 @@ def run_game():
 	bag = computerRack.replenish(bag)
 
 	playerTurn = True
+	#playerTurn = False
 
 	wordListTrie = generateWordList()
 
@@ -139,6 +141,10 @@ def run_game():
 	#Main Loop
 
 	firstMoveFlag = True
+	scoringTimes = []
+	crossTimes = []
+	genTimes = []
+	moveTimes = []
 
 	while True and len(bag):
 		
@@ -147,10 +153,13 @@ def run_game():
 
 		if(firstMoveFlag):
 			ourBoard.board[7][7].isAnchor = True
+			firstMoveFlag = False
 
 		if(playerTurn):
 
-			setCrossCheckBits(ourBoard, wordListTrie)			
+			setCrossCheckBits(ourBoard, wordListTrie)
+			#computeCrossSums(ourBoard)	
+
 			motion = getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack) #Get Info from Player
 			if(motion == False): #If Info is not legit, continue
 				continue
@@ -209,9 +218,24 @@ def run_game():
 
 		else: #AI
 			print "Computer is thinking it's move!\n\n\n"
-			setCrossCheckBits(ourBoard, wordListTrie)						
+
+
+			moveStart = datetime.datetime.now()
+			crossStart = datetime.datetime.now()
+
+			setCrossCheckBits(ourBoard, wordListTrie)
+			#computeCrossSums(ourBoard)	
+
+			crossEnd = datetime.datetime.now()
+
+			crossTimes.append((crossEnd-crossStart).microseconds)
+
 			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
 			#time.sleep(2)
+
+
+			genStart = datetime.datetime.now()
+
 
 			rack = [tile.letter for tile in computerRack.rack]
 
@@ -220,8 +244,9 @@ def run_game():
 
 			#Generate all across moves
 			for rowIdx, row in enumerate(ourBoard.board):
+
+				prevAnchor = -1
 				for idx, sq in enumerate(row):
-					prevAnchor = -1
 					if sq.isAnchor:
 
 						#print rowIdx, idx
@@ -234,47 +259,59 @@ def run_game():
 
 			#Generate all down moves
 			for colIdx in xrange(len(ourBoard.board)):
+
+				prevAnchor = -1
 				for rowIdx in xrange(len(ourBoard.board)):
-					prevAnchor = -1
 					sq = ourBoard.board[rowIdx][colIdx]
 					if sq.isAnchor:
 
 						limit = min(rowIdx, rowIdx-prevAnchor-1)
+
+						#print colIdx, rowIdx, limit, prevAnchor
+
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
 						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
+			genEnd = datetime.datetime.now()
+
+			genTimes.append((genEnd-genStart).microseconds)
 			
 			if(len(legalWords)):
 
-				maxScore = scoreThisMove(deepcopy(ourBoard), legalWords[0][0], legalWords[0][1], legalWords[0][2] )
-				maxIdx = 0
+				wordsWithScores = {} #dictionary of words with their scores
 
-				wordsWithScores = {legalWords[0]: maxScore} #dictionary of words with their scores
+				scoringStart = datetime.datetime.now()
 
-				for i in xrange(1,len(legalWords)):
-					currentScore = scoreThisMove(deepcopy(ourBoard), legalWords[i][0], legalWords[i][1], legalWords[i][2] )
-					if currentScore > maxScore:
-						maxScore = currentScore
-						maxIdx = i
+				for i in xrange(len(legalWords)):
+					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
 					wordsWithScores[legalWords[i]] = currentScore
 
-				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1])) #sorted dictionary
+				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1], reverse = True)) #sorted dictionary
 				#print wordsWithScores
 
+				i = 0
+				for k in wordsWithScores: 
+					legalWords[i] = k
+					i += 1
 
-				print legalWords[maxIdx][0], maxScore
+				scoringEnd = datetime.datetime.now()
 
-				print legalWords[maxIdx][3]
-				current = validityCheck(legalWords[maxIdx][2], ourBoard, legalWords[maxIdx][1], legalWords[maxIdx][0], computerRack)
+				timeTaken = (scoringEnd - scoringStart).microseconds
+				scoringTimes.append(timeTaken)
+
+				# print legalWords[0][0], wordsWithScores[legalWords[0]]
+				# print legalWords[0][3], legalWords[0][4]
+
+				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
 
 				if not current:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(legalWords[maxIdx][0], legalWords[maxIdx][1], boardRectangles, legalWords[maxIdx][2], BOARD, ourBoard)
+					renderWord(legalWords[0][0], legalWords[0][1], boardRectangles, legalWords[0][2], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -287,8 +324,8 @@ def run_game():
 
 					computerRack = removeTiles(computerRack, current)
 
-					scoreComputer += scoreThisMove(ourBoard, legalWords[maxIdx][0], legalWords[maxIdx][1], legalWords[maxIdx][2] )
-					playerMove(ourBoard,legalWords[maxIdx][0], legalWords[maxIdx][1], legalWords[maxIdx][2])
+					scoreComputer += wordsWithScores[legalWords[0]]
+					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
 
 					playerTurn = True
 					bag = computerRack.replenish(bag);
@@ -304,10 +341,20 @@ def run_game():
 				playerTurn = True
 				continue
 
+			moveEnd = datetime.datetime.now()
+			moveTimes.append((moveEnd - moveStart).microseconds)		
 
-
-		firstMoveFlag = False
 		pygame.display.flip()
+
+	print "Stats for nerdz"
+	print "Average crosscheck time:", sum(crossTimes)/float(len(crossTimes))
+	print "Std deviation:", np.std(crossTimes)
+	print "Average move gen time:", sum(genTimes)/float(len(genTimes))
+	print "Std deviation:", np.std(genTimes)
+	print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
+	print "Std deviation:", np.std(scoringTimes)
+	print "Average move time:", sum(moveTimes)/float(len(moveTimes))
+	print "Std deviation:", np.std(moveTimes)	
 
 def main():
 	run_game()

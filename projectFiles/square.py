@@ -14,6 +14,8 @@ class Square:
 		self.isAnchor = False
 		self.downCrossCheck = []
 		self.acrossCrossCheck = []
+		self.downCrossSum = 0
+		self.acrossCrossSum = 0
 		for _ in range(26):
 			self.downCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in a down move. 
 		for _ in range(26):

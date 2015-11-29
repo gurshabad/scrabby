@@ -43,6 +43,7 @@ def setCrossCheckBits(board, wordList):
 
 			partialFrontWord = ''
 			partialBackWord = ''
+			partialScore = 0
 
 			if(i < 14):
 				if(board.board[i+1][j].occupied):
@@ -50,6 +51,7 @@ def setCrossCheckBits(board, wordList):
 					k=1
 					while(board.board[i+k][j].occupied):
 						partialFrontWord =  partialFrontWord + board.board[i+k][j].getChar()
+						partialScore += board.board[i+k][j].tile.getVal()
 						k += 1
 						if(i+k>14):
 							break
@@ -59,6 +61,7 @@ def setCrossCheckBits(board, wordList):
 					k=1
 					while(board.board[i-k][j].occupied):
 						partialBackWord = board.board[i-k][j].getChar() + partialBackWord
+						partialScore += board.board[i-k][j].tile.getVal()
 						k += 1
 						if(i-k<0):
 							break
@@ -74,6 +77,8 @@ def setCrossCheckBits(board, wordList):
 					else:
 						board.board[i][j].acrossCrossCheck[letNo] = False
 
+			board.board[i][j].downSum = partialScore
+
 	#Set downCrossCheck Bits
 
 	for i in xrange(15):
@@ -81,6 +86,7 @@ def setCrossCheckBits(board, wordList):
 
 			partialFrontWord = ''
 			partialBackWord = ''
+			partialScore = 0
 
 			if(j < 14):
 				if(board.board[i][j+1].occupied):
@@ -88,6 +94,7 @@ def setCrossCheckBits(board, wordList):
 					k=1
 					while(board.board[i][j+k].occupied):
 						partialFrontWord =  partialFrontWord + board.board[i][j+k].getChar()
+						partialScore += board.board[i][j+k].tile.getVal()
 						k += 1
 						if(j+k>14):
 							break
@@ -97,6 +104,7 @@ def setCrossCheckBits(board, wordList):
 					k=1
 					while(board.board[i][j-k].occupied):
 						partialBackWord = board.board[i][j-k].getChar() + partialBackWord
+						partialScore += board.board[i][j-k].tile.getVal()
 						k += 1
 						if(j-k<0):
 							break
@@ -109,6 +117,66 @@ def setCrossCheckBits(board, wordList):
 						board.board[i][j].downCrossCheck[letNo] = True
 					else:
 						board.board[i][j].downCrossCheck[letNo] = False
+
+			board.board[i][j].acrossSum = partialScore
+
+
+def computeCrossSums(board):
+
+	#Set down sum
+
+	for i in xrange(15):
+		for j in xrange(15):
+
+			partialScore = 0
+
+			if(i < 14):
+				if(board.board[i+1][j].occupied):
+
+					k=1
+					while(board.board[i+k][j].occupied):
+						partialScore += board.board[i+k][j].tile.getVal()
+						k += 1
+						if(i+k>14):
+							break
+			if(i > 0):
+				if(board.board[i-1][j].occupied):
+
+					k=1
+					while(board.board[i-k][j].occupied):
+						partialScore += board.board[i-k][j].tile.getVal()
+						k += 1
+						if(i-k<0):
+							break
+			board.board[i][j].downSum = partialScore
+
+	#Set across sum
+
+	for i in xrange(15):
+		for j in xrange(15):
+
+			partialScore = 0
+
+			if(j < 14):
+				if(board.board[i][j+1].occupied):
+
+					k=1
+					while(board.board[i][j+k].occupied):
+						partialScore += board.board[i][j+k].tile.getVal()
+						k += 1
+						if(j+k>14):
+							break
+			if(j > 0):
+				if(board.board[i][j-1].occupied):
+
+					k=1
+					while(board.board[i][j-k].occupied):
+						partialScore += board.board[i][j-k].tile.getVal()
+						k += 1
+						if(j-k<0):
+							break
+
+			board.board[i][j].acrossSum = partialScore
 
 
 def validityCheck(isAcross, board, pos, word, playerRack):
@@ -215,7 +283,7 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]][pos[0]+loc].setTile(Tile(letter))
 
-			print board.board[pos[1]][pos[0]+loc].getChar(), pos[1], pos[0]+loc, board.board[pos[1]][pos[0]+loc].isAnchor
+			#print board.board[pos[1]][pos[0]+loc].getChar(), pos[1], pos[0]+loc, board.board[pos[1]][pos[0]+loc].isAnchor
 
 
 	else:
@@ -238,7 +306,7 @@ def playerMove(board, word, pos, isAcross):
 			board.board[pos[1]+loc][pos[0]].isAnchor = False
 
 			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
-			print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
+			#print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
 
 
 #This function calculates the score of a move after it has been played
@@ -248,10 +316,10 @@ def scoreThisMove(board, word, pos, isAcross):
 	#Get relevant space
 
 	if(isAcross):
-		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
+		current = [ deepcopy(board.board[r][c+elem]) for elem in range(len(word)) ]
 
 	else:
-		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
+		current = [ deepcopy(board.board[r+elem][c]) for elem in range(len(word)) ]
 
 	for i in range(len(word)):
 		if current[i].getChar() == '_':
@@ -277,23 +345,37 @@ def scoreThisMove(board, word, pos, isAcross):
 
 		#calculate score for the main word formed
 		mainWordScore = 0
+		sideWordScores = 0
 		numDW = 0 #number of double word premium tiles
 		numTW = 0 #number of triple word premium tiles
 		for t in current:
+
 			if t.occupied:
 				mainWordScore += t.tile.getVal()
 			else:
+
+
 				if t.special == 0:
 					mainWordScore += t.tile.getVal()
+					if(t.downSum > 0):
+						sideWordScores += t.downSum + t.tile.getVal()
 				elif t.special == 1:
 					mainWordScore += 2 * t.tile.getVal()
+					if(t.downSum > 0):
+						sideWordScores += t.downSum + 2*t.tile.getVal()
 				elif t.special == 2:
 					mainWordScore += 3 * t.tile.getVal()
+					if(t.downSum > 0):
+						sideWordScores += t.downSum + 3*t.tile.getVal()
 				elif t.special == 3:
 					mainWordScore += t.tile.getVal()
+					if(t.downSum > 0):
+						sideWordScores += 2*(t.downSum + t.tile.getVal())
 					numDW += 1
 				elif t.special == 4:
 					mainWordScore += t.tile.getVal()
+					if(t.downSum > 0):
+						sideWordScores += 3*(t.downSum + t.tile.getVal())
 					numTW += 1
 
 		if numDW > 0:
@@ -302,59 +384,60 @@ def scoreThisMove(board, word, pos, isAcross):
 			mainWordScore *= numTW * 3
 
 		finalScore += mainWordScore
+		finalScore += sideWordScores
 
 		#calculate score for words that are made up and down
-		for colno in range(c, c+len(word)):
-			if not board.board[r][colno].occupied:
-				upFlag = False
-				downFlag = False
-				if r > 0:
-					if (board.board[r-1][colno].occupied):
-						upFlag = True
-				if r < 14:
-					if (board.board[r+1][colno].occupied):
-						downFlag = True
+		# for colno in range(c, c+len(word)):
+		# 	if not board.board[r][colno].occupied:
+		# 		upFlag = False
+		# 		downFlag = False
+		# 		if r > 0:
+		# 			if (board.board[r-1][colno].occupied):
+		# 				upFlag = True
+		# 		if r < 14:
+		# 			if (board.board[r+1][colno].occupied):
+		# 				downFlag = True
 
-				#check next column if no word formed here
-				if not upFlag and not downFlag:
-					continue
+		# 		#check next column if no word formed here
+		# 		if not upFlag and not downFlag:
+		# 			continue
 
-				upStart = r
-				downStart = r
+		# 		upStart = r
+		# 		downStart = r
 
-				if upFlag and upStart > 0:
-					while board.board[upStart-1][colno].occupied:
-						upStart -= 1
-						if upStart == 0:
-							break
+		# 		if upFlag and upStart > 0:
+		# 			while board.board[upStart-1][colno].occupied:
+		# 				upStart -= 1
+		# 				if upStart == 0:
+		# 					break
 
-				if downFlag and downStart < 14:
-					while board.board[downStart+1][colno].occupied:
-						downStart += 1
-						if downStart == 14:
-							break
+		# 		if downFlag and downStart < 14:
+		# 			while board.board[downStart+1][colno].occupied:
+		# 				downStart += 1
+		# 				if downStart == 14:
+		# 					break
 
-				#start scoring word
-				wordScore = 0
-				if board.board[r][colno].special == 1:
-					wordScore += 2 * board.board[r][colno].tile.getVal()
-				elif board.board[r][colno].special == 2:
-					wordScore += 3 * board.board[r][colno].tile.getVal()
-				elif board.board[r][colno].special == 0:
-					wordScore += board.board[r][colno].tile.getVal()
+		# 		#start scoring word
+		# 		wordScore = 0
+		# 		if board.board[r][colno].special == 1:
+		# 			wordScore += 2 * board.board[r][colno].tile.getVal()
+		# 		elif board.board[r][colno].special == 2:
+		# 			wordScore += 3 * board.board[r][colno].tile.getVal()
+		# 		elif board.board[r][colno].special == 0:
+		# 			wordScore += board.board[r][colno].tile.getVal()
 
-				currentWordSquares = [ board.board[elem][colno] for elem in range(upStart, downStart+1)]
-				for currentSquare in currentWordSquares:
-					if currentSquare.occupied:
-						wordScore += currentSquare.tile.getVal()
+		# 		currentWordSquares = [ board.board[elem][colno] for elem in range(upStart, downStart+1)]
+		# 		for currentSquare in currentWordSquares:
+		# 			if currentSquare.occupied:
+		# 				wordScore += currentSquare.tile.getVal()
 
-				if board.board[r][colno].special == 3:
-					wordScore = 2 * wordScore
+		# 		if board.board[r][colno].special == 3:
+		# 			wordScore = 2 * wordScore
 
-				if board.board[r][colno].special == 4:
-					wordScore = 3 * wordScore
+		# 		if board.board[r][colno].special == 4:
+		# 			wordScore = 3 * wordScore
 
-				finalScore += wordScore
+		# 		finalScore += wordScore
 
 	else:
 		#check for bingo
@@ -367,6 +450,8 @@ def scoreThisMove(board, word, pos, isAcross):
 
 		#calculate score for the main word formed
 		mainWordScore = 0
+		sideWordScores = 0
+
 		numDW = 0 #number of double word premium tiles
 		numTW = 0 #number of triple word premium tiles
 		for t in current:
@@ -375,15 +460,25 @@ def scoreThisMove(board, word, pos, isAcross):
 			else:
 				if t.special == 0:
 					mainWordScore += t.tile.getVal()
+					if(t.acrossSum > 0):
+						sideWordScores += t.acrossSum + t.tile.getVal()
 				elif t.special == 1:
 					mainWordScore += 2 * t.tile.getVal()
+					if(t.acrossSum > 0):
+						sideWordScores += t.acrossSum + 2*t.tile.getVal()
 				elif t.special == 2:
 					mainWordScore += 3 * t.tile.getVal()
+					if(t.acrossSum > 0):
+						sideWordScores += t.acrossSum + 3*t.tile.getVal()
 				elif t.special == 3:
 					mainWordScore += t.tile.getVal()
+					if(t.acrossSum > 0):
+						sideWordScores += 2*(t.acrossSum + t.tile.getVal())
 					numDW += 1
 				elif t.special == 4:
 					mainWordScore += t.tile.getVal()
+					if(t.acrossSum > 0):
+						sideWordScores += 3*(t.acrossSum + t.tile.getVal())
 					numTW += 1
 
 		if numDW > 0:
@@ -392,59 +487,60 @@ def scoreThisMove(board, word, pos, isAcross):
 			mainWordScore *= numTW * 3
 
 		finalScore += mainWordScore
+		finalScore += sideWordScores
 
 		#calculate score for words that are made left and right
-		for rowno in range(r, r+len(word)):
-			if not board.board[rowno][c].occupied:
-				leftFlag = False
-				rightFlag = False
-				if c > 0:
-					if (board.board[rowno][c-1].occupied):
-						leftFlag = True
-				if c < 14:
-					if (board.board[rowno][c+1].occupied):
-						rightFlag = True
+		# for rowno in range(r, r+len(word)):
+		# 	if not board.board[rowno][c].occupied:
+		# 		leftFlag = False
+		# 		rightFlag = False
+		# 		if c > 0:
+		# 			if (board.board[rowno][c-1].occupied):
+		# 				leftFlag = True
+		# 		if c < 14:
+		# 			if (board.board[rowno][c+1].occupied):
+		# 				rightFlag = True
 
-				#check next row if no word formed here
-				if not leftFlag and not rightFlag:
-					continue
+		# 		#check next row if no word formed here
+		# 		if not leftFlag and not rightFlag:
+		# 			continue
 
-				leftStart = c
-				rightStart = c
+		# 		leftStart = c
+		# 		rightStart = c
 
-				if leftFlag and leftStart > 0:
-					while board.board[rowno][leftStart-1].occupied:
-						leftStart -= 1
-						if leftStart == 0:
-							break
+		# 		if leftFlag and leftStart > 0:
+		# 			while board.board[rowno][leftStart-1].occupied:
+		# 				leftStart -= 1
+		# 				if leftStart == 0:
+		# 					break
 
-				if rightFlag and rightStart < 14:
-					while board.board[rowno][rightStart+1].occupied:
-						rightStart += 1
-						if rightStart == 14:
-							break
+		# 		if rightFlag and rightStart < 14:
+		# 			while board.board[rowno][rightStart+1].occupied:
+		# 				rightStart += 1
+		# 				if rightStart == 14:
+		# 					break
 
-				#start scoring word
-				wordScore = 0
-				if board.board[rowno][c].special == 1:
-					wordScore += 2 * board.board[rowno][c].tile.getVal()
-				elif board.board[rowno][c].special == 2:
-					wordScore += 3 * board.board[rowno][c].tile.getVal()
-				elif board.board[rowno][c].special == 0:
-					wordScore += board.board[rowno][c].tile.getVal()
+		# 		#start scoring word
+		# 		wordScore = 0
+		# 		if board.board[rowno][c].special == 1:
+		# 			wordScore += 2 * board.board[rowno][c].tile.getVal()
+		# 		elif board.board[rowno][c].special == 2:
+		# 			wordScore += 3 * board.board[rowno][c].tile.getVal()
+		# 		elif board.board[rowno][c].special == 0:
+		# 			wordScore += board.board[rowno][c].tile.getVal()
 
-				currentWordSquares = [ board.board[rowno][elem] for elem in range(leftStart, rightStart+1)]
-				for currentSquare in currentWordSquares:
-					if currentSquare.occupied:
-						wordScore += currentSquare.tile.getVal()
+		# 		currentWordSquares = [ board.board[rowno][elem] for elem in range(leftStart, rightStart+1)]
+		# 		for currentSquare in currentWordSquares:
+		# 			if currentSquare.occupied:
+		# 				wordScore += currentSquare.tile.getVal()
 
-				if board.board[rowno][c].special == 3:
-					wordScore = 2 * wordScore
+		# 		if board.board[rowno][c].special == 3:
+		# 			wordScore = 2 * wordScore
 
-				if board.board[rowno][c].special == 4:
-					wordScore = 3 * wordScore
+		# 		if board.board[rowno][c].special == 4:
+		# 			wordScore = 3 * wordScore
 
-				finalScore += wordScore
+		# 		finalScore += wordScore
 
 	return finalScore
 
@@ -485,13 +581,6 @@ trieEnd = datetime.datetime.now()
 #TO-DO: Construct DAWG from Trie
 ###########
 
-############## TESTING AREA #####################
-
-############# TESTING AREA ENDS ##################
-
-#TO-DO#####
-#Implementation of cross check sets and anchor squares.
-###########
 
 #Implementation of back-tracking algorithms presented in the paper 'The World's Fastest Scrabble Program' by Appel and Jacobson
 #https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf
@@ -545,7 +634,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 					#print "HEREIAM", board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')]
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 						rack.append(child)
 
 		#Case 2: Left of anchor square vacant
@@ -569,7 +658,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 				if child in rack: 
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, limit)
 						rack.append(child)
 
 			if limit > 0:
@@ -583,7 +672,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 			if child in rack:
 				if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 					rack.remove(child)
-					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 					rack.append(child)
 
 	#return legalWords
@@ -594,13 +683,13 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 #We are looking to add currentNode to the end of partialWord[:-1]
 #The validity of placing currentNode has already been checked (partialWord is some valid prefix)
 
-def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare):
+def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare, originalLimit):
 
 	#Case 1: At the board's edge. Play currentNode and check validity of partialWord.
 	if(square == 14):
 		if '{' in currentNode.children:
 			colIdx = square - len(partialWord) + 1
-			legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx)))
+			legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx), originalLimit))
 
 	#Case 2: Still looking to place more tiles on the board after this move if we can
 	else:
@@ -611,21 +700,22 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legal
 
 			if '{' in currentNode.children:
 				colIdx = square - len(partialWord) + 1
-				legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx) ))
+				legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx), originalLimit ))
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
 				if child in rack:
 					if board[rowIdx][square+1].acrossCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
 						rack.remove(child)
-						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
+						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare, originalLimit)
 						rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
 		else:
 			if board[rowIdx][square+1].getChar() in currentNode.children:
-				extendRightBeta(board, rowIdx, rack, partialWord + board[rowIdx][square+1].getChar(), currentNode.children[board[rowIdx][square+1].getChar()], square + 1, legalWords, anchorSquare)
+				extendRightBeta(board, rowIdx, rack, partialWord + board[rowIdx][square+1].getChar(), currentNode.children[board[rowIdx][square+1].getChar()], square + 1, legalWords, anchorSquare, originalLimit)
+
 
 
 def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit, legalWords):
@@ -660,7 +750,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 				if child in rack: 
 					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 						rack.append(child)
 
 		#Case 2: Left of anchor square vacant
@@ -685,7 +775,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 				if child in rack:
 					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, limit)
 						rack.append(child)
 
 			if limit > 0:
@@ -701,7 +791,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 			if child in rack:
 				if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 					rack.remove(child)
-					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare)
+					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
 					rack.append(child)
 
 	#return legalWords
@@ -712,13 +802,13 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 #We are looking to add currentNode to the end of partialWord[:-1]
 #The validity of placing currentNode has already been checked (partialWord is some valid prefix)
 
-def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare):
+def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare, originalLimit):
 
 	#Case 1: At the board's edge. Play currentNode and check validity of partialWord.
 	if(square == 14):
 		if '{' in currentNode.children:
 			rowIdx = square - len(partialWord) + 1
-			legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare) ))
+			legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare), originalLimit ))
 
 	#Case 2: Still looking to place more tiles on the board after this move if we can
 	else:
@@ -728,21 +818,21 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 			#Play and check if partial word is legal.   
 			if '{' in currentNode.children:
 				rowIdx = square - len(partialWord) + 1
-				legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare) ))
+				legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare), originalLimit ))
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
 				if child in rack:
 					if board[square+1][colIdx].downCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
 						rack.remove(child)
-						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare)
+						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare, originalLimit)
 						rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
 		else:
 			if board[square+1][colIdx].getChar() in currentNode.children:
-				extendDownBeta(board, colIdx, rack, partialWord + board[square+1][colIdx].getChar(), currentNode.children[board[square+1][colIdx].getChar()], square + 1, legalWords, anchorSquare)
+				extendDownBeta(board, colIdx, rack, partialWord + board[square+1][colIdx].getChar(), currentNode.children[board[square+1][colIdx].getChar()], square + 1, legalWords, anchorSquare, originalLimit)
 
 
 
