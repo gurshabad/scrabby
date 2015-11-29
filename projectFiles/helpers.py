@@ -26,7 +26,7 @@ def renderTile(letter2play, square, BOARD):
 	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 8)
 	square = pygame.draw.rect(BOARD, (238, 228, 218), (square.topleft[0], square.topleft[1], square.width, square.height))
 	BOARD.blit(FONTSMALL.render(letter2play, 1, (50,50,50)),(square.topleft[0]+10, square.topleft[1]+5))
-	BOARD.blit(FONTSMALL2.render(str(Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+20, square.topleft[1]+15))
+	BOARD.blit(FONTSMALL2.render(str(Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
 
 def renderRackTile(letter, score, square, SECONDHALF):
 	FONTSMALL = pygame.font.SysFont('Andale Mono', 27)

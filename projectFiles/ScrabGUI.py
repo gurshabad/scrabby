@@ -13,6 +13,7 @@ import random
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
 isRandomWalk = 0
+canGoHomeNow = 0
 
 def run_game():
 
@@ -134,6 +135,7 @@ def run_game():
 	displayRack(playerRack, SECONDHALF, SCREEN)
 	pygame.display.flip()
 
+
 	#-----------------------------------------
 
 	ourBoard.printBoard()
@@ -149,6 +151,7 @@ def run_game():
 	moveTimes = []
 
 	while True and not (playerRack.isEmpty() or computerRack.isEmpty()):
+
 		
 		#------------------------------------
 		#Detect Events
@@ -165,6 +168,12 @@ def run_game():
 			if(motion == False): #If Info is not legit, continue
 				continue
 			elif(motion[0] == "Shuffle"): #If Users asks for shuffle
+				if(len(bag) == 0):
+					if(canGoHomeNow == 1):
+						print "Human: Can't possibly find a move.\nWaiting for Computer's Response.\n"
+						break
+					else:
+						canGoHomeNow = 1
 				print motion[1]
 				playerRack = removeTiles(playerRack, motion[1])
 				print "Shuffle Success!\n\n"
@@ -268,6 +277,7 @@ def run_game():
 			genEnd = datetime.datetime.now()
 
 			genTimes.append((genEnd-genStart).microseconds)
+
 			
 			if(len(legalWords)):
 
@@ -321,10 +331,16 @@ def run_game():
 
 					computerRack = removeTiles(computerRack, current)
 
+					print "\nAI played:", AIWord[:3]
+					print "Score of move:", wordsWithScores[AIWord]
+					print
+
+
 					scoreComputer += wordsWithScores[AIWord]
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
 
-					#playerTurn = True
+					playerTurn = True
+					#if(len(bag) == 0): playerTurn = True
 					bag = computerRack.replenish(bag);
 
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
@@ -333,10 +349,19 @@ def run_game():
 
 					ourBoard.printBoard()
 
+				canGoHomeNow = 0
+
 
 			else:
 				if(len(bag) == 0):
-					break
+					if canGoHomeNow == 1:
+						print "Computer: Can't possibly find a move.\nEnding Game.\nSigh.\nGGWP.\n"
+						break
+					else:
+						canGoHomeNow = 1
+						playerTurn = True
+						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
+						continue
 				else:
 					print "No Move Possible! Had to shuffle!"
 					toRemove = ''.join([x.letter for x in computerRack.rack])
@@ -346,7 +371,7 @@ def run_game():
 					bag = computerRack.replenish(bag) #Replenish Player's Rack after shuffle
 					bag += [x for x in toRemove]
 
-					#playerTurn = True
+					playerTurn = True
 
 					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
@@ -378,7 +403,7 @@ def run_game():
 	else:
 		display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
 
-
+	#sys.exit(0)
 	while True:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT: sys.exit()
