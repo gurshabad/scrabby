@@ -7,6 +7,7 @@ from inputbox import *
 from helpers import *
 from game import *
 from copy import deepcopy
+from collections import OrderedDict
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
 
@@ -210,7 +211,7 @@ def run_game():
 			print "Computer is thinking it's move!\n\n\n"
 			setCrossCheckBits(ourBoard, wordListTrie)						
 			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
-			time.sleep(2)
+			#time.sleep(2)
 
 			rack = [tile.letter for tile in computerRack.rack]
 
@@ -243,20 +244,25 @@ def run_game():
 						prevAnchor = anchorSquare
 
 						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
-	
 
-			random.shuffle(legalWords)
-
+			
 			if(len(legalWords)):
 
 				maxScore = scoreThisMove(deepcopy(ourBoard), legalWords[0][0], legalWords[0][1], legalWords[0][2] )
 				maxIdx = 0
+
+				wordsWithScores = {legalWords[0]: maxScore} #dictionary of words with their scores
 
 				for i in xrange(1,len(legalWords)):
 					currentScore = scoreThisMove(deepcopy(ourBoard), legalWords[i][0], legalWords[i][1], legalWords[i][2] )
 					if currentScore > maxScore:
 						maxScore = currentScore
 						maxIdx = i
+					wordsWithScores[legalWords[i]] = currentScore
+
+				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1])) #sorted dictionary
+				#print wordsWithScores
+
 
 				print legalWords[maxIdx][0], maxScore
 

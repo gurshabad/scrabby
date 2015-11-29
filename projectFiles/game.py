@@ -338,8 +338,10 @@ def scoreThisMove(board, word, pos, isAcross):
 				wordScore = 0
 				if board.board[r][colno].special == 1:
 					wordScore += 2 * board.board[r][colno].tile.getVal()
-				if board.board[r][colno].special == 2:
+				elif board.board[r][colno].special == 2:
 					wordScore += 3 * board.board[r][colno].tile.getVal()
+				elif board.board[r][colno].special == 0:
+					wordScore += board.board[r][colno].tile.getVal()
 
 				currentWordSquares = [ board.board[elem][colno] for elem in range(upStart, downStart+1)]
 				for currentSquare in currentWordSquares:
@@ -426,8 +428,10 @@ def scoreThisMove(board, word, pos, isAcross):
 				wordScore = 0
 				if board.board[rowno][c].special == 1:
 					wordScore += 2 * board.board[rowno][c].tile.getVal()
-				if board.board[rowno][c].special == 2:
+				elif board.board[rowno][c].special == 2:
 					wordScore += 3 * board.board[rowno][c].tile.getVal()
+				elif board.board[rowno][c].special == 0:
+					wordScore += board.board[rowno][c].tile.getVal()
 
 				currentWordSquares = [ board.board[rowno][elem] for elem in range(leftStart, rightStart+1)]
 				for currentSquare in currentWordSquares:
@@ -442,7 +446,6 @@ def scoreThisMove(board, word, pos, isAcross):
 
 				finalScore += wordScore
 
-	#print "Final score calculated: ", finalScore
 	return finalScore
 
 
