@@ -9,8 +9,10 @@ from helpers import *
 from game import *
 from copy import deepcopy
 from collections import OrderedDict
+import random
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
+isRandomWalk = 0
 
 def run_game():
 
@@ -146,7 +148,7 @@ def run_game():
 	genTimes = []
 	moveTimes = []
 
-	while True and len(bag):
+	while True and not (playerRack.isEmpty() or computerRack.isEmpty()):
 		
 		#------------------------------------
 		#Detect Events
@@ -291,15 +293,19 @@ def run_game():
 
 				# print legalWords[0][0], wordsWithScores[legalWords[0]]
 				# print legalWords[0][3], legalWords[0][4]
+				if(isRandomWalk == 0): AIWord = legalWords[0]
+				else:
+					print "RANDOM WALK!!!"
+					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
-				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
+				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
 
 				if not current:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(legalWords[0][0], legalWords[0][1], boardRectangles, legalWords[0][2], BOARD, ourBoard)
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -312,8 +318,8 @@ def run_game():
 
 					computerRack = removeTiles(computerRack, current)
 
-					scoreComputer += wordsWithScores[legalWords[0]]
-					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
+					scoreComputer += wordsWithScores[AIWord]
+					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
 
 					#playerTurn = True
 					bag = computerRack.replenish(bag);
@@ -326,6 +332,8 @@ def run_game():
 
 
 			else:
+				if(len(bag) == 0):
+					break
 				#playerTurn = True
 				continue
 
@@ -345,6 +353,12 @@ def run_game():
 	print "Std deviation:", np.std(moveTimes)	
 
 def main():
+	if len(sys.argv) != 2:
+		print "\nUsage: python "+sys.argv[0]+" 0",
+		print "or python "+sys.argv[0]+" 1\n"
+		sys.exit(1)
+	global isRandomWalk
+	isRandomWalk = sys.argv[1]
 	run_game()
 
 if __name__ == '__main__':

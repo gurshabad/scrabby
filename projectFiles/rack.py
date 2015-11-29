@@ -7,6 +7,9 @@ class Rack:
 		self.rack =[]
 		self.numOfTiles = 0
 
+	def isEmpty(self):
+		return self.numOfTiles == 0
+
 	def showRack(self):
 
 		print "Current Rack"
