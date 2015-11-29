@@ -293,9 +293,12 @@ def run_game():
 
 				# print legalWords[0][0], wordsWithScores[legalWords[0]]
 				# print legalWords[0][3], legalWords[0][4]
-				if(isRandomWalk == 0): AIWord = legalWords[0]
+				if(isRandomWalk == 0):
+					print "Greedy!"
+					AIWord = legalWords[0]
 				else:
-					print "RANDOM WALK!!!"
+					print isRandomWalk
+					print "Random Walk!"
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
@@ -334,7 +337,21 @@ def run_game():
 			else:
 				if(len(bag) == 0):
 					break
-				#playerTurn = True
+				else:
+					print "No Move Possible! Had to shuffle!"
+					toRemove = ''.join([x.letter for x in computerRack.rack])
+					if(len(bag) < 7): toRemove = toRemove[:len(bag)]
+					computerRack = removeTiles(computerRack,toRemove)
+					print "Shuffle Success!\n\n"
+					bag = computerRack.replenish(bag) #Replenish Player's Rack after shuffle
+					bag += [x for x in toRemove]
+
+					#playerTurn = True
+
+					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+					time.sleep(2)
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+
 				continue
 
 			moveEnd = datetime.datetime.now()
@@ -350,7 +367,21 @@ def run_game():
 	print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
 	print "Std deviation:", np.std(scoringTimes)
 	print "Average move time:", sum(moveTimes)/float(len(moveTimes))
-	print "Std deviation:", np.std(moveTimes)	
+	print "Std deviation:", np.std(moveTimes)
+
+	if scoreComputer > scorePlayer:
+		res = "COMPUTER"
+		display_box(SCREEN, SECONDHALF, "COMPUTER WON!", (0, 102, 255))
+	elif scorePlayer > scoreComputer:
+		res = "PLAYER"
+		display_box(SCREEN, SECONDHALF, "PLAYER WON!", (0, 102, 255))
+	else:
+		display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
+
+
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT: sys.exit()
 
 def main():
 	if len(sys.argv) != 2:
@@ -358,7 +389,7 @@ def main():
 		print "or python "+sys.argv[0]+" 1\n"
 		sys.exit(1)
 	global isRandomWalk
-	isRandomWalk = sys.argv[1]
+	isRandomWalk = int(sys.argv[1])
 	run_game()
 
 if __name__ == '__main__':
