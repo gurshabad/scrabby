@@ -341,7 +341,7 @@ def run_game():
 					scoreComputer += wordsWithScores[AIWord]
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
 
-					playerTurn = True
+					#playerTurn = True
 					#if(len(bag) == 0): playerTurn = True
 					bag = computerRack.replenish(bag);
 
@@ -361,7 +361,7 @@ def run_game():
 						break
 					else:
 						canGoHomeNow = 1
-						playerTurn = True
+						#playerTurn = True
 						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
 						continue
 				else:
@@ -373,7 +373,7 @@ def run_game():
 					bag = computerRack.replenish(bag) #Replenish Player's Rack after shuffle
 					bag += [x for x in toRemove]
 
-					playerTurn = True
+					#playerTurn = True
 
 					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)

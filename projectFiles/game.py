@@ -10,7 +10,6 @@ from tile import *
 from rack import *
 from trie import *
 from helpers import *
-from copy import deepcopy
 import random
 
 #For benchmarking:
@@ -258,10 +257,10 @@ def scoreThisMove(board, word, pos, isAcross):
 	#Get relevant space
 
 	if(isAcross):
-		current = [ deepcopy(board.board[r][c+elem]) for elem in range(len(word)) ]
+		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
 
 	else:
-		current = [ deepcopy(board.board[r+elem][c]) for elem in range(len(word)) ]
+		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
 
 	for i in range(len(word)):
 		if current[i].getChar() == '_':
@@ -483,6 +482,9 @@ def scoreThisMove(board, word, pos, isAcross):
 		# 			wordScore = 3 * wordScore
 
 		# 		finalScore += wordScore
+	for i in range(len(word)):
+		if not current[i].occupied:
+			current[i].tile = Tile()
 
 	return finalScore
 
