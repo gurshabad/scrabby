@@ -19,20 +19,18 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 	for simLookUp in legalWords:
 		copy_ourBoard = deepcopy(ourBoard)
 		copy_computerRack = deepcopy(computerRack)
-		copy_bag = deepcopy(bag)
+		copy_bag = bag
 
 		scoredWords[simLookUp] = 10*scoreThisMove(ourBoard, simLookUp[0], simLookUp[1], simLookUp[2] )
 		current = validityCheck(simLookUp[2], ourBoard, simLookUp[1], simLookUp[0], copy_computerRack)
 		playerMove(copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change
 		copy_computerRack = removeTiles(copy_computerRack, current) #change
-		copy_bag = copy_computerRack.replenish(copy_bag) #change
+		copy_bag = copy_computerRack.replenish(copy_bag)
+		setCrossCheckBits(copy_ourBoard, wordListTrie)
 		
 		for x in xrange(10):
 			simRack = Rack()
-			copy_bag = simRack.replenish(copy_bag) #change
-
-			setCrossCheckBits(copy_ourBoard, wordListTrie) #change
-
+			copy_bag = simRack.replenish(copy_bag)
 			rack = [tile.letter for tile in simRack.rack]
 
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
@@ -286,7 +284,22 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 #The following function just sets the tiles in the backend board and sets adjacent squares to Anchor 
 def playerMove(board, word, pos, isAcross):
 
+	r = pos[1]
+	c = pos[0]
+	changed = []
+
 	#word = word.lower()
+	if(isAcross):
+		current = []
+		for elem in range(len(word)):
+			current.append(board.board[r][c+elem])
+			if board.board[r][c+elem].getChar() == '_': changed.append([r, c+elem])
+
+	else:
+		current = []
+		for elem in range(len(word)):
+			current.append(board.board[r+elem][c])
+			if board.board[r+elem][c].getChar() == '_': changed.append([r+elem, c])
 
 	if(isAcross):
 
@@ -333,6 +346,9 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
 			#print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
+
+	print changed
+	return changed
 
 
 #This function calculates the score of a move after it has been played
