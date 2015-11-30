@@ -11,6 +11,90 @@ from rack import *
 from trie import *
 from helpers import *
 import random
+from copy import deepcopy
+
+def getBestWord(ourBoard, legalWords, computerRack, bag):
+	scoredWords = {}
+	for simLookUp in legalWords:
+		copy_ourBoard = deepcopy(ourBoard)
+		copy_computerRack = deepcopy(computerRack)
+		copy_bag = deepcopy(bag)
+
+		scoredWords[simLookUp] = 10*scoreThisMove(ourBoard, simLookUp[0], simLookUp[1], simLookUp[2] )
+		current = validityCheck(simLookUp[2], ourBoard, simLookUp[1], simLookUp[0], copy_computerRack)
+		playerMove(copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change
+		copy_computerRack = removeTiles(copy_computerRack, current) #change
+		copy_bag = copy_computerRack.replenish(copy_bag) #change
+		
+		for x in xrange(10):
+			simRack = Rack()
+			copy_bag = simRack.replenish(copy_bag) #change
+
+			setCrossCheckBits(copy_ourBoard, wordListTrie) #change
+
+			rack = [tile.letter for tile in simRack.rack]
+
+			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
+			legalWords = []
+
+			#Generate all across moves
+			for rowIdx, row in enumerate(copy_ourBoard.board):
+
+				prevAnchor = -1
+				for idx, sq in enumerate(row):
+					if sq.isAnchor:
+
+						limit = min(idx, idx-prevAnchor-1)
+						anchorSquare = idx
+						prevAnchor = anchorSquare
+
+						leftPart(copy_ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+			#Generate all down moves
+			for colIdx in xrange(len(copy_ourBoard.board)):
+
+				prevAnchor = -1
+				for rowIdx in xrange(len(copy_ourBoard.board)):
+					sq = copy_ourBoard.board[rowIdx][colIdx]
+					if sq.isAnchor:
+
+						limit = min(rowIdx, rowIdx-prevAnchor-1)
+						anchorSquare = rowIdx
+						prevAnchor = anchorSquare
+
+						upperPart(copy_ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+			if(len(legalWords)):
+
+				wordsWithScores = {} #dictionary of words with their scores
+
+				scoringStart = datetime.datetime.now()
+
+				for i in xrange(len(legalWords)):
+					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
+					wordsWithScores[legalWords[i]] = currentScore
+
+				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1], reverse = True)) #sorted dictionary
+
+				i = 0
+				for k in wordsWithScores: 
+					legalWords[i] = k
+					i += 1
+
+				scoredWords[simLookUp] -= wordsWithScores[legalWords[0]]
+
+			else:
+				scoredWords[simLookUp] -= 0
+
+	finalVals = []
+	for x in scoredWords:
+		finalVals.append((x,scoredWords[x]))
+	
+	finalVals.sort(key = lambda x: x[1], reverse=True)
+	print finalVals
+
+	return finalVals[0][0]
+
 
 #For benchmarking:
 def memory_usage():
