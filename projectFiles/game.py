@@ -12,6 +12,7 @@ from trie import *
 from helpers import *
 import random
 from copy import deepcopy
+from collections import OrderedDict
 
 def getBestWord(ourBoard, legalWords, computerRack, bag):
 	scoredWords = {}
