@@ -170,7 +170,7 @@ def run_game():
 			elif(motion[0] == "Shuffle"): #If Users asks for shuffle
 				if(len(bag) == 0):
 					if(canGoHomeNow == 1):
-						print "Human: Can't possibly find a move.\nWaiting for Computer's Response.\n"
+						print "Human: Can't possibly find a move.\nEnding Game.\nGGWP All.\n"
 						break
 					else:
 						canGoHomeNow = 1
@@ -221,6 +221,8 @@ def run_game():
 					print "After player move:"
 					playerRack.showRack()
 					ourBoard.printBoard() #DisplayBoard
+
+					canGoHomeNow = 0
 
 
 		else: #AI
