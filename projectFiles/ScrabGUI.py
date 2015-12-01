@@ -149,6 +149,7 @@ def run_game():
 	crossTimes = []
 	genTimes = []
 	moveTimes = []
+	simTimes = []
 
 	while True and not (playerRack.isEmpty() or computerRack.isEmpty()):
 
@@ -314,10 +315,15 @@ def run_game():
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
 				else:
-					print "Top Ten: "+str(legalWords[:10])
-					print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
+					# print "Top Ten: "+str(legalWords[:10])
+					# print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
+
+					simStart = datetime.datetime.now()
 
 					AIWord = getBestWord(ourBoard, deepcopy(legalWords[:10]), computerRack, bag)
+
+					simEnd = datetime.datetime.now()
+					simTimes.append((simEnd-simStart).microseconds)
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
 
@@ -347,7 +353,7 @@ def run_game():
 					scoreComputer += wordsWithScores[AIWord]
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
 
-					playerTurn = True
+					#playerTurn = True
 					#if(len(bag) == 0): playerTurn = True
 					bag = computerRack.replenish(bag);
 
@@ -367,7 +373,7 @@ def run_game():
 						break
 					else:
 						canGoHomeNow = 1
-						playerTurn = True
+						#playerTurn = True
 						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
 						continue
 				else:
@@ -379,7 +385,7 @@ def run_game():
 					bag = computerRack.replenish(bag) #Replenish Player's Rack after shuffle
 					bag += [x for x in toRemove]
 
-					playerTurn = True
+					#playerTurn = True
 
 					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
@@ -399,6 +405,8 @@ def run_game():
 	print "Std deviation:", np.std(genTimes)
 	print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
 	print "Std deviation:", np.std(scoringTimes)
+	print "Average sim time:", sum(simTimes)/float(len(simTimes))
+	print "Std deviation:", np.std(simTimes)	
 	print "Average move time:", sum(moveTimes)/float(len(moveTimes))
 	print "Std deviation:", np.std(moveTimes)
 

@@ -14,19 +14,48 @@ import random
 from copy import deepcopy
 from collections import OrderedDict
 
+
+#For benchmarking:
+def memory_usage():
+    """Memory usage of the current process in kilobytes."""
+    status = None
+    result = {'peak': 0, 'rss': 0}
+    try:
+        # This will only work on systems with a /proc file system
+        # (like Linux).
+        status = open('/proc/self/status')
+        for line in status:
+            parts = line.split()
+            key = parts[0][2:-1].lower()
+            if key in result:
+                result[key] = int(parts[1])
+    finally:
+        if status is not None:
+            status.close()
+    return result
+
+
+
 def getBestWord(ourBoard, legalWords, computerRack, bag):
+
+
+	print "Lookahead phase begins"
+
 	scoredWords = {}
 	for simLookUp in legalWords:
-		copy_ourBoard = deepcopy(ourBoard)
+
+		copy_ourBoard = ourBoard
 		copy_computerRack = deepcopy(computerRack)
 		copy_bag = bag
 
 		scoredWords[simLookUp] = 10*scoreThisMove(ourBoard, simLookUp[0], simLookUp[1], simLookUp[2] )
 		current = validityCheck(simLookUp[2], ourBoard, simLookUp[1], simLookUp[0], copy_computerRack)
-		playerMove(copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change
-		copy_computerRack = removeTiles(copy_computerRack, current) #change
+		changedPositions = playerMove(copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change - fixed
+		copy_computerRack = removeTiles(copy_computerRack, current) #change - not fixed
 		copy_bag = copy_computerRack.replenish(copy_bag)
-		setCrossCheckBits(copy_ourBoard, wordListTrie)
+
+		crossCheckResetData = saveCrossCheckBits(copy_ourBoard)
+		setCrossCheckBits(copy_ourBoard, wordListTrie) #change 
 		
 		for x in xrange(10):
 			simRack = Rack()
@@ -85,6 +114,9 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 			else:
 				scoredWords[simLookUp] -= 0
 
+		undoPlayerMove(ourBoard, changedPositions)
+		resetCrossCheckBits(ourBoard, crossCheckResetData)
+				
 	finalVals = []
 	for x in scoredWords:
 		finalVals.append((x,scoredWords[x]))
@@ -95,25 +127,29 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 	return finalVals[0][0]
 
 
-#For benchmarking:
-def memory_usage():
-    """Memory usage of the current process in kilobytes."""
-    status = None
-    result = {'peak': 0, 'rss': 0}
-    try:
-        # This will only work on systems with a /proc file system
-        # (like Linux).
-        status = open('/proc/self/status')
-        for line in status:
-            parts = line.split()
-            key = parts[0][2:-1].lower()
-            if key in result:
-                result[key] = int(parts[1])
-    finally:
-        if status is not None:
-            status.close()
-    return result
+def saveCrossCheckBits(board):
 
+	downBits = [ [ ( [ board.board[i][j].downCrossCheck[letter] for letter in xrange(26) ], board.board[i][j].acrossSum ) for j in xrange(15) ] for i in xrange(15) ]
+	acrossBits = [ [ ( [ board.board[i][j].acrossCrossCheck[letter] for letter in xrange(26) ], board.board[i][j].downSum ) for j in xrange(15) ] for i in xrange(15) ]
+
+	return (downBits, acrossBits)
+
+def resetCrossCheckBits(board, crossCheckResetData):
+
+	downBits = crossCheckResetData[0]
+	acrossBits = crossCheckResetData[1]
+
+	for i in xrange(15):
+		for j in xrange(15):
+			board.board[i][j].acrossSum = downBits[i][j][1] 
+			for k in xrange(26):
+				board.board[i][j].downCrossCheck[k] = downBits[i][j][0][k] 
+
+	for i in xrange(15):
+		for j in xrange(15):
+			board.board[i][j].downSum = acrossBits[i][j][1] 
+			for k in xrange(26):
+				board.board[i][j].acrossCrossCheck[k] = acrossBits[i][j][0][k] 
 
 
 def setCrossCheckBits(board, wordList):
@@ -205,7 +241,7 @@ def setCrossCheckBits(board, wordList):
 
 def validityCheck(isAcross, board, pos, word, playerRack):
 
-	print word, pos, isAcross
+	#print word, pos, isAcross
 
 	r = pos[1]
 	c = pos[0]
@@ -232,7 +268,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	else:
 		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
 
-	print [ c.getChar() for c in current ]
+	#print [ c.getChar() for c in current ]
 
 	rackCopy = [ t.letter for t in playerRack.rack ]
 	deleteThis = []
@@ -279,6 +315,56 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	#Return list of letters to be removed from the rack.
 	return ''.join(deleteThis)
 
+def undoPlayerMove(board, changedPositions):
+
+	for pos in changedPositions:
+		r = pos[1]
+		c = pos[0]
+
+		board.board[r][c].tile = Tile()
+		board.board[r][c].occupied = False
+
+	recomputeAnchorSquares(board)
+
+
+def recomputeAnchorSquares(board):
+
+
+	for i in xrange(15):
+		for j in xrange(15):
+			if(board.board[i][j].occupied == False):
+
+				#print board.board[7][7].occupied
+
+				occupiedCount = 0
+				if(i > 0):
+					#print board.board[i-1][j]
+					if(board.board[i-1][j].occupied == True):
+						board.board[i][j].isAnchor = True
+						occupiedCount += 1
+				if(i<14):
+					#print board.board[i+1][j]
+					if(board.board[i+1][j].occupied == True):
+						board.board[i][j].isAnchor = True
+						occupiedCount += 1
+				if(j > 0):
+					#print board.board[i][j-1]
+					if(board.board[i][j-1].occupied == True):
+						board.board[i][j].isAnchor = True
+						occupiedCount += 1
+				if(j<14):
+					#print board.board[i][j+1]
+					if(board.board[i][j+1].occupied == True):
+						board.board[i][j].isAnchor = True
+						occupiedCount += 1
+				if(occupiedCount == 0):
+					board.board[i][j].isAnchor = False
+
+			else:
+				board.board[i][j].isAnchor = False
+
+	if(board.board[7][7].occupied == False):
+		board.board[7][7].isAnchor = True
 
 
 #The following function just sets the tiles in the backend board and sets adjacent squares to Anchor 
@@ -293,13 +379,13 @@ def playerMove(board, word, pos, isAcross):
 		current = []
 		for elem in range(len(word)):
 			current.append(board.board[r][c+elem])
-			if board.board[r][c+elem].getChar() == '_': changed.append([r, c+elem])
+			if board.board[r][c+elem].getChar() == '_': changed.append((c+elem,r))
 
 	else:
 		current = []
 		for elem in range(len(word)):
 			current.append(board.board[r+elem][c])
-			if board.board[r+elem][c].getChar() == '_': changed.append([r+elem, c])
+			if board.board[r+elem][c].getChar() == '_': changed.append((c, r+elem))
 
 	if(isAcross):
 
@@ -347,7 +433,7 @@ def playerMove(board, word, pos, isAcross):
 			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
 			#print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
 
-	print changed
+	#print changed
 	return changed
 
 
