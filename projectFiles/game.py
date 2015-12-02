@@ -88,7 +88,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 		setCrossCheckBits(ply0Copy_ourBoard, wordListTrie) #change 
 
 		pointDifferentials = []
-		for x in xrange(20):  #What Quackle does 300 times.
+		for x in xrange(10):  #What Quackle does 300 times.
 
 
 			simRack = Rack()
@@ -573,8 +573,8 @@ def scoreThisMove(board, word, pos, isAcross):
 		for tile in current:
 			if not tile.occupied:
 				tileCount += 1
-		# if tileCount == 7:
-		# 	finalScore += 50
+		if tileCount == 7:
+			finalScore += 50
 
 		#calculate score for the main word formed
 		mainWordScore = 0
@@ -618,68 +618,14 @@ def scoreThisMove(board, word, pos, isAcross):
 
 		finalScore += mainWordScore
 		finalScore += sideWordScores
-
-		#calculate score for words that are made up and down
-		# for colno in range(c, c+len(word)):
-		# 	if not board.board[r][colno].occupied:
-		# 		upFlag = False
-		# 		downFlag = False
-		# 		if r > 0:
-		# 			if (board.board[r-1][colno].occupied):
-		# 				upFlag = True
-		# 		if r < 14:
-		# 			if (board.board[r+1][colno].occupied):
-		# 				downFlag = True
-
-		# 		#check next column if no word formed here
-		# 		if not upFlag and not downFlag:
-		# 			continue
-
-		# 		upStart = r
-		# 		downStart = r
-
-		# 		if upFlag and upStart > 0:
-		# 			while board.board[upStart-1][colno].occupied:
-		# 				upStart -= 1
-		# 				if upStart == 0:
-		# 					break
-
-		# 		if downFlag and downStart < 14:
-		# 			while board.board[downStart+1][colno].occupied:
-		# 				downStart += 1
-		# 				if downStart == 14:
-		# 					break
-
-		# 		#start scoring word
-		# 		wordScore = 0
-		# 		if board.board[r][colno].special == 1:
-		# 			wordScore += 2 * board.board[r][colno].tile.getVal()
-		# 		elif board.board[r][colno].special == 2:
-		# 			wordScore += 3 * board.board[r][colno].tile.getVal()
-		# 		elif board.board[r][colno].special == 0:
-		# 			wordScore += board.board[r][colno].tile.getVal()
-
-		# 		currentWordSquares = [ board.board[elem][colno] for elem in range(upStart, downStart+1)]
-		# 		for currentSquare in currentWordSquares:
-		# 			if currentSquare.occupied:
-		# 				wordScore += currentSquare.tile.getVal()
-
-		# 		if board.board[r][colno].special == 3:
-		# 			wordScore = 2 * wordScore
-
-		# 		if board.board[r][colno].special == 4:
-		# 			wordScore = 3 * wordScore
-
-		# 		finalScore += wordScore
-
 	else:
 		#check for bingo
 		tileCount = 0
 		for tile in current:
 			if not tile.occupied:
 				tileCount += 1
-		# if tileCount == 7:
-		# 	finalScore += 50
+		if tileCount == 7:
+			finalScore += 50
 
 		#calculate score for the main word formed
 		mainWordScore = 0
@@ -722,58 +668,6 @@ def scoreThisMove(board, word, pos, isAcross):
 		finalScore += mainWordScore
 		finalScore += sideWordScores
 
-		#calculate score for words that are made left and right
-		# for rowno in range(r, r+len(word)):
-		# 	if not board.board[rowno][c].occupied:
-		# 		leftFlag = False
-		# 		rightFlag = False
-		# 		if c > 0:
-		# 			if (board.board[rowno][c-1].occupied):
-		# 				leftFlag = True
-		# 		if c < 14:
-		# 			if (board.board[rowno][c+1].occupied):
-		# 				rightFlag = True
-
-		# 		#check next row if no word formed here
-		# 		if not leftFlag and not rightFlag:
-		# 			continue
-
-		# 		leftStart = c
-		# 		rightStart = c
-
-		# 		if leftFlag and leftStart > 0:
-		# 			while board.board[rowno][leftStart-1].occupied:
-		# 				leftStart -= 1
-		# 				if leftStart == 0:
-		# 					break
-
-		# 		if rightFlag and rightStart < 14:
-		# 			while board.board[rowno][rightStart+1].occupied:
-		# 				rightStart += 1
-		# 				if rightStart == 14:
-		# 					break
-
-		# 		#start scoring word
-		# 		wordScore = 0
-		# 		if board.board[rowno][c].special == 1:
-		# 			wordScore += 2 * board.board[rowno][c].tile.getVal()
-		# 		elif board.board[rowno][c].special == 2:
-		# 			wordScore += 3 * board.board[rowno][c].tile.getVal()
-		# 		elif board.board[rowno][c].special == 0:
-		# 			wordScore += board.board[rowno][c].tile.getVal()
-
-		# 		currentWordSquares = [ board.board[rowno][elem] for elem in range(leftStart, rightStart+1)]
-		# 		for currentSquare in currentWordSquares:
-		# 			if currentSquare.occupied:
-		# 				wordScore += currentSquare.tile.getVal()
-
-		# 		if board.board[rowno][c].special == 3:
-		# 			wordScore = 2 * wordScore
-
-		# 		if board.board[rowno][c].special == 4:
-		# 			wordScore = 3 * wordScore
-
-		# 		finalScore += wordScore
 	for i in range(len(word)):
 		if not current[i].occupied:
 			current[i].tile = Tile()
