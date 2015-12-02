@@ -236,10 +236,10 @@ def run_game():
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
 				else:
-					print "Top Ten: "+str(legalWords[:10])
-					print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
+					print "Top Five: "+str(legalWords[:5])
+					print "Top Five: "+str([wordsWithScores[x] for x in legalWords[:5]])
 
-					AIWord = getBestWord(ourBoard, deepcopy(legalWords[:10]), playerRack, bag)
+					AIWord = getBestWord(ourBoard, legalWords[:5], playerRack, bag)
 
 				# print legalWords[0][0], wordsWithScores[legalWords[0]]
 				# print legalWords[0][3], legalWords[0][4]
@@ -401,10 +401,10 @@ def run_game():
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
 				else:
-					print "Top Ten: "+str(legalWords[:10])
-					print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
+					print "Top Five: "+str(legalWords[:5])
+					print "Top Five: "+str([wordsWithScores[x] for x in legalWords[:5]])
 
-					AIWord = getBestWord(ourBoard, deepcopy(legalWords[:10]), computerRack, bag)
+					AIWord = getBestWord(ourBoard, legalWords[:5], computerRack, bag)
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
 
