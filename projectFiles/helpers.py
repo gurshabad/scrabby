@@ -56,11 +56,11 @@ def sanitizePosition(pos):
 			return (x,y)
 		else: return False
 
-def displayScores(scorePlayer, scoreComputer, inBag, SECONDHALF, SCREEN, PLAYER_MOVE):
+def displayScores(scorePlayer, scoreComputer, inBag, SECONDHALF, SCREEN, PLAYER_MOVE, playerTag = "Player", computerTag = "Computer"):
 	
 	pygame.draw.rect(SECONDHALF, (42,42,42), (0,0,500,125))
-	print "Player Score: "+str(scorePlayer)
-	print "Computer Score: "+str(scoreComputer)+"\n\n"
+	print playerTag+" Score: "+str(scorePlayer)
+	print computerTag+" Score: "+str(scoreComputer)+"\n\n"
 
 	FONT = pygame.font.SysFont('Futura', 27)
 	FONT2 = pygame.font.SysFont('Futura', 24)
@@ -70,9 +70,9 @@ def displayScores(scorePlayer, scoreComputer, inBag, SECONDHALF, SCREEN, PLAYER_
 	if(PLAYER_MOVE): humanColor = (102, 204, 255)
 	else: computerColor = (102, 204, 255)
 
-	SECONDHALF.blit(FONT.render("HUMAN:", 1, humanColor), (30, 20))
+	SECONDHALF.blit(FONT.render(playerTag.upper()+":", 1, humanColor), (30, 20))
 	SECONDHALF.blit(FONT.render(str(scorePlayer), 1, (175,175,175)), (210, 20))
-	SECONDHALF.blit(FONT.render("COMPUTER:", 1, computerColor), (30, 60))
+	SECONDHALF.blit(FONT.render(computerTag.upper()+":", 1, computerColor), (30, 60))
 	SECONDHALF.blit(FONT.render(str(scoreComputer), 1, (175,175,175)), (210, 60))
 	SECONDHALF.blit(FONT2.render("IN BAG", 1, (204, 102, 255)), (340, 20))
 	SECONDHALF.blit(FONT2.render(str(inBag), 1, (175, 175, 175)), (370, 60))

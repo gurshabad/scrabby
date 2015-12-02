@@ -37,6 +37,14 @@ def run_game():
 	playerTurn = True
 	#playerTurn = False
 
+	P1 = "Monty"
+	P2 = "Monty"
+	if(choice1 == 0): P1 = "Midas"
+	if(choice2 == 0): P2 = "Midas"
+
+	if(choice1 == 1): P1 = "Monkey"
+	if(choice2 == 1): P2 = "Monkey"
+
 	wordListTrie = generateWordList()
 
 	#------------------------------------------
@@ -132,7 +140,7 @@ def run_game():
 	FIRSTHALF.blit(BOARD, (19,19))
 	SCREEN.blit(FIRSTHALF,(0,0))
 	SCREEN.blit(SECONDHALF,(500,0))
-	displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+	displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
 	displayRack(playerRack, SECONDHALF, SCREEN)
 	pygame.display.flip()
 
@@ -140,7 +148,7 @@ def run_game():
 	#-----------------------------------------
 
 	ourBoard.printBoard()
-	print "Player gets to move first!\n"
+	print P1+" gets to move first!\n"
 
 	#-----------------------------------------
 	#Main Loop
@@ -168,7 +176,7 @@ def run_game():
 
 			if(justStartAlready): ask(SCREEN, SECONDHALF, "Start?"); justStartAlready = False #Get Info from Player
 
-			display_box(SCREEN, SECONDHALF, "GREEDY'S TURN!", (160,36,34))
+			display_box(SCREEN, SECONDHALF, P1.upper()+"'S TURN!", (160,36,34))
 			#time.sleep(2)
 
 			rack = [tile.letter for tile in playerRack.rack]
@@ -224,7 +232,6 @@ def run_game():
 					print "Greedy!"
 					AIWord = legalWords[0]
 				elif(choice1 == 1):
-					print isRandomWalk
 					print "Random Walk!"
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
@@ -252,12 +259,12 @@ def run_game():
 					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
-					print "Before Computer Move:"
+					print "Before "+P1+" Move:"
 					playerRack.showRack()
 
 					playerRack = removeTiles(playerRack, current)
 
-					print "\nAI played:", AIWord[:3]
+					print "\n"+P1+" played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]
 					print
 
@@ -269,9 +276,9 @@ def run_game():
 					#if(len(bag) == 0): playerTurn = True
 					bag = playerRack.replenish(bag);
 
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
 					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
-					print "After Computer Move:"
+					print "After"+P1+" Move:"
 					playerRack.showRack()
 
 					ourBoard.printBoard()
@@ -282,12 +289,12 @@ def run_game():
 			else:
 				if(len(bag) == 0):
 					if canGoHomeNow == 1:
-						print "Computer: Can't possibly find a move.\nEnding Game.\nSigh.\nGGWP.\n"
+						print P1+": Can't possibly find a move.\nEnding Game.\nSigh.\nGGWP.\n"
 						break
 					else:
 						canGoHomeNow = 1
 						playerTurn = False
-						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
+						print P1+": Can't possibly find a move.\nWaiting for Human's Response.\n"
 						continue
 				else:
 					print "No Move Possible! Had to shuffle!"
@@ -302,12 +309,12 @@ def run_game():
 
 					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
 
 				continue
 
 		else: #AI
-			print "Computer is thinking it's move!\n\n\n"
+			print P2+" is thinking it's move!\n\n\n"
 
 
 			moveStart = datetime.datetime.now()
@@ -319,7 +326,7 @@ def run_game():
 
 			crossTimes.append((crossEnd-crossStart).microseconds)
 
-			display_box(SCREEN, SECONDHALF, "MCTS'S TURN!", (160,36,34))
+			display_box(SCREEN, SECONDHALF, P2.upper()+"'S TURN!", (160,36,34))
 			#time.sleep(2)
 
 
@@ -390,7 +397,6 @@ def run_game():
 					print "Greedy!"
 					AIWord = legalWords[0]
 				elif(choice2 == 1):
-					print isRandomWalk
 					print "Random Walk!"
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
@@ -415,12 +421,12 @@ def run_game():
 					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
-					print "Before Computer Move:"
+					print "Before "+P2+" Move:"
 					computerRack.showRack()
 
 					computerRack = removeTiles(computerRack, current)
 
-					print "\nAI played:", AIWord[:3]
+					print "\n"+P2+" played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]
 					print
 
@@ -432,8 +438,8 @@ def run_game():
 					#if(len(bag) == 0): playerTurn = True
 					bag = computerRack.replenish(bag);
 
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
-					print "After Computer Move:"
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
+					print "After "+P2+" Move:"
 					computerRack.showRack()
 
 					ourBoard.printBoard()
@@ -444,12 +450,12 @@ def run_game():
 			else:
 				if(len(bag) == 0):
 					if canGoHomeNow == 1:
-						print "Computer: Can't possibly find a move.\nEnding Game.\nSigh.\nGGWP.\n"
+						print P2+": Can't possibly find a move.\nEnding Game.\nSigh.\nGGWP.\n"
 						break
 					else:
 						canGoHomeNow = 1
 						playerTurn = True
-						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
+						print P2+": Can't possibly find a move.\nWaiting for Human's Response.\n"
 						continue
 				else:
 					print "No Move Possible! Had to shuffle!"
@@ -464,7 +470,7 @@ def run_game():
 
 					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
 
 				continue
 
@@ -484,11 +490,9 @@ def run_game():
 	print "Std deviation:", np.std(moveTimes)
 
 	if scoreComputer > scorePlayer:
-		res = "COMPUTER"
-		display_box(SCREEN, SECONDHALF, "COMPUTER WON!", (0, 102, 255))
+		display_box(SCREEN, SECONDHALF, P2.upper()+" WON!", (0, 102, 255))
 	elif scorePlayer > scoreComputer:
-		res = "PLAYER"
-		display_box(SCREEN, SECONDHALF, "PLAYER WON!", (0, 102, 255))
+		display_box(SCREEN, SECONDHALF, P1.upper()+" WON!", (0, 102, 255))
 	else:
 		display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
 
