@@ -202,7 +202,7 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 		return False		
 
 def removeTiles(playerRack, letters):
-	print letters
+	#print letters
 	for x in letters:
 		tiles = [t.letter for t in playerRack.rack]
 		for idx, elem in enumerate(tiles):

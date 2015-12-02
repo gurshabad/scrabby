@@ -11,6 +11,7 @@ from rack import *
 from trie import *
 from helpers import *
 import random
+import numpy as np
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -41,32 +42,45 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 
 	print "Lookahead phase begins"
 
+
+
 	scoredWords = {}
 	for simLookUp in legalWords:
 
-		copy_ourBoard = ourBoard
+		playSimTimes = []
+		playSimStart = datetime.datetime.now()
+
+		ply0Copy_ourBoard = deepcopy(ourBoard)
 		copy_computerRack = deepcopy(computerRack)
 		copy_bag = bag
 
-		scoredWords[simLookUp] = 10*scoreThisMove(ourBoard, simLookUp[0], simLookUp[1], simLookUp[2] )
+		ply0Score = scoreThisMove(ourBoard, simLookUp[0], simLookUp[1], simLookUp[2] )
+
 		current = validityCheck(simLookUp[2], ourBoard, simLookUp[1], simLookUp[0], copy_computerRack)
-		changedPositions = playerMove(copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change - fixed
+		changedPositions = playerMove(ply0Copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change - fixed
 		copy_computerRack = removeTiles(copy_computerRack, current) #change - not fixed
 		copy_bag = copy_computerRack.replenish(copy_bag)
 
-		crossCheckResetData = saveCrossCheckBits(copy_ourBoard)
-		setCrossCheckBits(copy_ourBoard, wordListTrie) #change 
-		
-		for x in xrange(10):
+		# crossCheckResetData = saveCrossCheckBits(copy_ourBoard)
+		setCrossCheckBits(ply0Copy_ourBoard, wordListTrie) #change 
+
+		pointDifferentials = []
+		for x in xrange(20):  #What Quackle does 300 times.
+
+
 			simRack = Rack()
 			copy_bag = simRack.replenish(copy_bag)
 			rack = [tile.letter for tile in simRack.rack]
 
-			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
-			legalWords = []
+			ply1Copy_ourBoard = deepcopy(ply0Copy_ourBoard)
+
+			#For simulated ply1 moves by player
+
+			#List of 3-tuples: (word, pos, isAcross)			
+			genWords = []
 
 			#Generate all across moves
-			for rowIdx, row in enumerate(copy_ourBoard.board):
+			for rowIdx, row in enumerate(ply0Copy_ourBoard.board):
 
 				prevAnchor = -1
 				for idx, sq in enumerate(row):
@@ -76,46 +90,114 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						leftPart(copy_ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						leftPart(ply0Copy_ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
 
 			#Generate all down moves
-			for colIdx in xrange(len(copy_ourBoard.board)):
+			for colIdx in xrange(len(ply0Copy_ourBoard.board)):
 
 				prevAnchor = -1
-				for rowIdx in xrange(len(copy_ourBoard.board)):
-					sq = copy_ourBoard.board[rowIdx][colIdx]
+				for rowIdx in xrange(len(ply0Copy_ourBoard.board)):
+					sq = ply0Copy_ourBoard.board[rowIdx][colIdx]
 					if sq.isAnchor:
 
 						limit = min(rowIdx, rowIdx-prevAnchor-1)
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
-						upperPart(copy_ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						upperPart(ply0Copy_ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
 
-			if(len(legalWords)):
+			if(len(genWords)):
 
 				wordsWithScores = {} #dictionary of words with their scores
 
 				scoringStart = datetime.datetime.now()
 
-				for i in xrange(len(legalWords)):
-					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
-					wordsWithScores[legalWords[i]] = currentScore
+				for i in xrange(len(genWords)):
+					currentScore = scoreThisMove(ply0Copy_ourBoard, genWords[i][0], genWords[i][1], genWords[i][2] )
+					wordsWithScores[genWords[i]] = currentScore
 
 				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1], reverse = True)) #sorted dictionary
 
 				i = 0
 				for k in wordsWithScores: 
-					legalWords[i] = k
+					genWords[i] = k
 					i += 1
 
-				scoredWords[simLookUp] -= wordsWithScores[legalWords[0]]
+				playaWord = genWords[0]
+				ply1Score = wordsWithScores[genWords[0]]
+				#Play word.
+				playerMove(ply1Copy_ourBoard,playaWord[0], playaWord[1], playaWord[2])
 
 			else:
-				scoredWords[simLookUp] -= 0
+				ply1Score = 0
 
-		undoPlayerMove(ourBoard, changedPositions)
-		resetCrossCheckBits(ourBoard, crossCheckResetData)
+
+			#For simulated ply2 moves by AI
+			#Generate all across moves
+			setCrossCheckBits(ply1Copy_ourBoard, wordListTrie) #change 
+
+			genWords = []
+
+			for rowIdx, row in enumerate(ply1Copy_ourBoard.board):
+
+				prevAnchor = -1
+				for idx, sq in enumerate(row):
+					if sq.isAnchor:
+
+						limit = min(idx, idx-prevAnchor-1)
+						anchorSquare = idx
+						prevAnchor = anchorSquare
+
+						leftPart(ply1Copy_ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
+
+			#Generate all down moves
+			for colIdx in xrange(len(ply1Copy_ourBoard.board)):
+
+				prevAnchor = -1
+				for rowIdx in xrange(len(ply1Copy_ourBoard.board)):
+					sq = ply1Copy_ourBoard.board[rowIdx][colIdx]
+					if sq.isAnchor:
+
+						limit = min(rowIdx, rowIdx-prevAnchor-1)
+						anchorSquare = rowIdx
+						prevAnchor = anchorSquare
+
+						upperPart(ply1Copy_ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
+
+			if(len(genWords)):
+
+				wordsWithScores = {} #dictionary of words with their scores
+
+				scoringStart = datetime.datetime.now()
+
+				for i in xrange(len(genWords)):
+					currentScore = scoreThisMove(ply1Copy_ourBoard, genWords[i][0], genWords[i][1], genWords[i][2] )
+					wordsWithScores[genWords[i]] = currentScore
+
+				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1], reverse = True)) #sorted dictionary
+
+				i = 0
+				for k in wordsWithScores: 
+					genWords[i] = k
+					i += 1
+
+				ply2Score = wordsWithScores[genWords[0]]
+
+			else:
+				ply2Score = 0
+
+			pointDifferential = ply0Score + ply2Score - ply1Score
+			pointDifferentials.append(pointDifferential)
+
+		scoredWords[simLookUp] = float(sum(pointDifferentials))/len(pointDifferentials)
+		# undoPlayerMove(ourBoard, changedPositions)
+		# resetCrossCheckBits(ourBoard, crossCheckResetData)
+
+		playSimEnd = datetime.datetime.now()
+		playSimTimes.append((playSimEnd-playSimStart).microseconds)
+
+	print "Average playSim time:", sum(playSimTimes)/float(len(playSimTimes))
+	print "Std deviation:", np.std(playSimTimes)
 				
 	finalVals = []
 	for x in scoredWords:
@@ -760,7 +842,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 				if child in rack:
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
+						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
 
 		#Case 2: Left of anchor square vacant
@@ -779,7 +861,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 				if child in rack: 
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, limit)
+						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
 
 			#If we can create even more leftParts
@@ -796,7 +878,7 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 			if child in rack:
 				if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 					rack.remove(child)
-					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
+					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 					rack.append(child)
 
 #extendRightBeta notes-
@@ -805,13 +887,13 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 #We are looking to add currentNode to the end of partialWord[:-1]
 #The validity of placing currentNode has already been checked (partialWord is some valid prefix)
 
-def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare, originalLimit):
+def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legalWords):
 
 	#Case 1: At the board's edge. Play currentNode and check validity of partialWord.
 	if(square == 14):
 		if '{' in currentNode.children:
 			colIdx = square - len(partialWord) + 1
-			legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx), originalLimit))
+			legalWords.append((partialWord, (colIdx, rowIdx), True))
 
 	#Case 2: Still looking to place more tiles on the board after this move if we can
 	else:
@@ -822,21 +904,21 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legal
 
 			if '{' in currentNode.children:
 				colIdx = square - len(partialWord) + 1
-				legalWords.append((partialWord, (colIdx, rowIdx), True, (anchorSquare, rowIdx), originalLimit ))
+				legalWords.append((partialWord, (colIdx, rowIdx), True))
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
 				if child in rack:
 					if board[rowIdx][square+1].acrossCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
 						rack.remove(child)
-						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare, originalLimit)
+						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords)
 						rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
 		else:
 			if board[rowIdx][square+1].getChar() in currentNode.children:
-				extendRightBeta(board, rowIdx, rack, partialWord + board[rowIdx][square+1].getChar(), currentNode.children[board[rowIdx][square+1].getChar()], square + 1, legalWords, anchorSquare, originalLimit)
+				extendRightBeta(board, rowIdx, rack, partialWord + board[rowIdx][square+1].getChar(), currentNode.children[board[rowIdx][square+1].getChar()], square + 1, legalWords)
 
 
 
@@ -872,7 +954,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 				if child in rack: 
 					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
+						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
 
 		#Case 2: Above of anchor square vacant
@@ -891,7 +973,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 				if child in rack:
 					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
-						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, limit)
+						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
 
 			if limit > 0:
@@ -907,7 +989,7 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 			if child in rack:
 				if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
 					rack.remove(child)
-					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords, anchorSquare, -1)
+					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 					rack.append(child)
 
 
@@ -917,13 +999,13 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 #We are looking to add currentNode to the end of partialWord[:-1]
 #The validity of placing currentNode has already been checked (partialWord is some valid prefix)
 
-def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalWords, anchorSquare, originalLimit):
+def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalWords):
 
 	#Case 1: At the board's edge. Play currentNode and check validity of partialWord.
 	if(square == 14):
 		if '{' in currentNode.children:
 			rowIdx = square - len(partialWord) + 1
-			legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare), originalLimit ))
+			legalWords.append((partialWord, (colIdx, rowIdx), False ))
 
 	#Case 2: Still looking to place more tiles on the board after this move if we can
 	else:
@@ -933,21 +1015,21 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 			#Play and check if partial word is legal.   
 			if '{' in currentNode.children:
 				rowIdx = square - len(partialWord) + 1
-				legalWords.append((partialWord, (colIdx, rowIdx), False, (colIdx, anchorSquare), originalLimit ))
+				legalWords.append((partialWord, (colIdx, rowIdx), False ))
 
 			#Find a candidate tile to play at the next square and call extendRight on it
 			for child in currentNode.children:
 				if child in rack:
 					if board[square+1][colIdx].downCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
 						rack.remove(child)
-						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords, anchorSquare, originalLimit)
+						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords)
 						rack.append(child)
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
 		else:
 			if board[square+1][colIdx].getChar() in currentNode.children:
-				extendDownBeta(board, colIdx, rack, partialWord + board[square+1][colIdx].getChar(), currentNode.children[board[square+1][colIdx].getChar()], square + 1, legalWords, anchorSquare, originalLimit)
+				extendDownBeta(board, colIdx, rack, partialWord + board[square+1][colIdx].getChar(), currentNode.children[board[square+1][colIdx].getChar()], square + 1, legalWords)
 
 
 

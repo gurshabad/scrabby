@@ -320,7 +320,7 @@ def run_game():
 
 					simStart = datetime.datetime.now()
 
-					AIWord = getBestWord(ourBoard, deepcopy(legalWords[:10]), computerRack, bag)
+					AIWord = getBestWord(ourBoard, legalWords[:10], computerRack, bag)
 
 					simEnd = datetime.datetime.now()
 					simTimes.append((simEnd-simStart).microseconds)
