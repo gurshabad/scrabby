@@ -35,14 +35,37 @@ def memory_usage():
             status.close()
     return result
 
+leaves = { 'A' : -0.63, 'B' : -2.00, 'C' : 0.8, 'D': 0.45, 'E' :0.35, 'F': -2.21, 'S' :8.04,'Z' :5.12,'X' :3.31,'R' :1.10,'H' :1.09,'M' :0.58,'N' :0.22,'T' :-0.10,'L' :-0.17,'P' :-0.46,'K' :-0.54,'Y' :-0.63,'J' :-1.47,'I' :-2.07,'O' :-2.50,'G' :-2.85,'W' :-3.82,'U' :-5.10,'V' :-5.55, 'Q' :-6.79 }
+
+def computeLeaves(word, pos, isAcross, rack, board):
+
+	r = pos[1]
+	c = pos[0]
+
+	if(isAcross):
+		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
+	else:
+		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
+
+	rackCopy = [ t.letter for t in rack.rack ]
+
+	for idx, letter in enumerate(word):
+
+		if( current[idx].getChar() == '_'):  #If blank position
+			if (letter in rackCopy): #Check if we even have the letter in our rack.
+				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
+	score = 0
+
+	for letter in rackCopy:
+		score += leaves[letter.upper()]
+
+	return score
 
 
 def getBestWord(ourBoard, legalWords, computerRack, bag):
 
 
 	print "Lookahead phase begins"
-
-
 
 	scoredWords = {}
 	for simLookUp in legalWords:
@@ -171,17 +194,17 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 				scoringStart = datetime.datetime.now()
 
 				for i in xrange(len(genWords)):
-					currentScore = scoreThisMove(ply1Copy_ourBoard, genWords[i][0], genWords[i][1], genWords[i][2] )
-					wordsWithScores[genWords[i]] = currentScore
+					currentScore = scoreThisMove(ply1Copy_ourBoard, genWords[i][0], genWords[i][1], genWords[i][2] ) 
+					wordsWithScores[genWords[i]] = (currentScore, currentScore + computeLeaves(genWords[i][0], genWords[i][1], genWords[i][2], computerRack, ourBoard))
 
-				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1], reverse = True)) #sorted dictionary
+				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1][1], reverse = True)) #sorted dictionary
 
 				i = 0
 				for k in wordsWithScores: 
 					genWords[i] = k
 					i += 1
 
-				ply2Score = wordsWithScores[genWords[0]]
+				ply2Score = wordsWithScores[genWords[0]][0]
 
 			else:
 				ply2Score = 0
@@ -550,8 +573,8 @@ def scoreThisMove(board, word, pos, isAcross):
 		for tile in current:
 			if not tile.occupied:
 				tileCount += 1
-		if tileCount == 7:
-			finalScore += 50
+		# if tileCount == 7:
+		# 	finalScore += 50
 
 		#calculate score for the main word formed
 		mainWordScore = 0
@@ -655,8 +678,8 @@ def scoreThisMove(board, word, pos, isAcross):
 		for tile in current:
 			if not tile.occupied:
 				tileCount += 1
-		if tileCount == 7:
-			finalScore += 50
+		# if tileCount == 7:
+		# 	finalScore += 50
 
 		#calculate score for the main word formed
 		mainWordScore = 0

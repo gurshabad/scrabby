@@ -12,10 +12,9 @@ from collections import OrderedDict
 import random
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
-isRandomWalk = 0
+choice1 = 0
+choice2 = 0
 canGoHomeNow = 0
-
-leaves = { 'A' : -0.63, 'B' : -2.00, 'C' : 0.8, 'D': 0.45, 'E' :0.35, 'F': -2.21, 'S' :8.04,'Z' :5.12,'X' :3.31,'R' :1.10,'H' :1.09,'M' :0.58,'N' :0.22,'T' :-0.10,'L' :-0.17,'P' :-0.46,'K' :-0.54,'Y' :-0.63,'J' :-1.47,'I' :-2.07,'O' :-2.50,'G' :-2.85,'W' :-3.82,'U' :-5.10,'V' :-5.55, 'Q' :-6.79 }
 
 def run_game():
 
@@ -151,7 +150,7 @@ def run_game():
 	crossTimes = []
 	genTimes = []
 	moveTimes = []
-	simTimes = []
+	justStartAlready = True
 
 	while True and not (playerRack.isEmpty() or computerRack.isEmpty()):
 
@@ -167,68 +166,149 @@ def run_game():
 
 			setCrossCheckBits(ourBoard, wordListTrie)
 
-			motion = getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack) #Get Info from Player
-			if(motion == False): #If Info is not legit, continue
-				continue
-			elif(motion[0] == "Shuffle"): #If Users asks for shuffle
-				if(len(bag) == 0):
-					if(canGoHomeNow == 1):
-						print "Human: Can't possibly find a move.\nEnding Game.\nGGWP All.\n"
-						break
-					else:
-						canGoHomeNow = 1
-				print motion[1]
-				playerRack = removeTiles(playerRack, motion[1])
-				print "Shuffle Success!\n\n"
-				playerTurn = False
-				bag = playerRack.replenish(bag) #Replenish Player's Rack after shuffle
-				displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
-				playerRack.showRack()
+			if(justStartAlready): ask(SCREEN, SECONDHALF, "Start?"); justStartAlready = False #Get Info from Player
 
-				bag += [x for x in motion[1]]
-				display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
-				time.sleep(2)
-				displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+			display_box(SCREEN, SECONDHALF, "GREEDY'S TURN!", (160,36,34))
+			#time.sleep(2)
 
-			else: #If Info is legit, try playing the word
-				#Check for valid move here
-				current = validityCheck(motion[3], ourBoard, motion[2], motion[1], playerRack)
+			rack = [tile.letter for tile in playerRack.rack]
 
-				if not (current):
-					print "Error. Invalid Move.\n\n"
-					display_box(SCREEN, SECONDHALF, "Invalid Move!", (139,0,0))
-					time.sleep(2)
+			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
+			legalWords = []
+
+			#Generate all across moves
+			for rowIdx, row in enumerate(ourBoard.board):
+
+				prevAnchor = -1
+				for idx, sq in enumerate(row):
+					if sq.isAnchor:
+
+						limit = min(idx, idx-prevAnchor-1)
+						anchorSquare = idx
+						prevAnchor = anchorSquare
+
+						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+			#Generate all down moves
+			for colIdx in xrange(len(ourBoard.board)):
+
+				prevAnchor = -1
+				for rowIdx in xrange(len(ourBoard.board)):
+					sq = ourBoard.board[rowIdx][colIdx]
+					if sq.isAnchor:
+
+						limit = min(rowIdx, rowIdx-prevAnchor-1)
+						anchorSquare = rowIdx
+						prevAnchor = anchorSquare
+
+						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+			if(len(legalWords)):
+
+				wordsWithScores = {} #dictionary of words with their scores
+
+				scoringStart = datetime.datetime.now()
+
+				for i in xrange(len(legalWords)):
+					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
+					wordsWithScores[legalWords[i]] = (currentScore, currentScore + computeLeaves(legalWords[i][0], legalWords[i][1], legalWords[i][2], computerRack, ourBoard))
+
+				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1][1], reverse = True)) #sorted dictionary
+
+				i = 0
+				for k in wordsWithScores: 
+					legalWords[i] = k
+					i += 1
+
+				if(choice1 == 0):
+					print "Greedy!"
+					AIWord = legalWords[0]
+				elif(choice1 == 1):
+					print isRandomWalk
+					print "Random Walk!"
+					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
+
+				else:
+					print "Top Ten: "+str(legalWords[:10])
+					print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
+
+					AIWord = getBestWord(ourBoard, deepcopy(legalWords[:10]), playerRack, bag)
+
+				# print legalWords[0][0], wordsWithScores[legalWords[0]]
+				# print legalWords[0][3], legalWords[0][4]
+
+				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], playerRack)
+
+				if not current:
+					print "Try again."
 					continue
 				else:
-					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
+
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
 					print "Move Success!\n\n"
 					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
-					time.sleep(2)
-					#current = motion[1]
+					time.sleep(1)
 
-					print "Before player move:"
+					print "Before Computer Move:"
 					playerRack.showRack()
+
 					playerRack = removeTiles(playerRack, current)
 
-					#need to call scoreThisMove before playerMove function is called because the latter sets tile to occupied
-					scorePlayer += scoreThisMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #calculate score of the move
-					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #Play the move on offline board
-					
-					playerTurn = False #Change turn to Computer
-					bag = playerRack.replenish(bag) #Replenish Player's Rack after legit move
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
-					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
-					print "After player move:"
-					playerRack.showRack()
-					ourBoard.printBoard() #DisplayBoard
+					print "\nAI played:", AIWord[:3]
+					print "Score of move:", wordsWithScores[AIWord][0]
+					print
 
-					canGoHomeNow = 0
+
+					scorePlayer += wordsWithScores[AIWord][0]
+					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
+
+					playerTurn = False
+					#if(len(bag) == 0): playerTurn = True
+					bag = playerRack.replenish(bag);
+
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
+					print "After Computer Move:"
+					playerRack.showRack()
+
+					ourBoard.printBoard()
+
+				canGoHomeNow = 0
+
+
+			else:
+				if(len(bag) == 0):
+					if canGoHomeNow == 1:
+						print "Computer: Can't possibly find a move.\nEnding Game.\nSigh.\nGGWP.\n"
+						break
+					else:
+						canGoHomeNow = 1
+						playerTurn = False
+						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
+						continue
+				else:
+					print "No Move Possible! Had to shuffle!"
+					toRemove = ''.join([x.letter for x in playerRack.rack])
+					if(len(bag) < 7): toRemove = toRemove[:len(bag)]
+					playerRack = removeTiles(playerRack,toRemove)
+					print "Shuffle Success!\n\n"
+					bag = playerRack.replenish(bag) #Replenish Player's Rack after shuffle
+					bag += [x for x in toRemove]
+
+					playerTurn = False
+
+					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+					time.sleep(2)
+					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
+
+				continue
 
 		else: #AI
 			print "Computer is thinking it's move!\n\n\n"
+
 
 			moveStart = datetime.datetime.now()
 			crossStart = datetime.datetime.now()
@@ -239,7 +319,7 @@ def run_game():
 
 			crossTimes.append((crossEnd-crossStart).microseconds)
 
-			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
+			display_box(SCREEN, SECONDHALF, "MCTS'S TURN!", (160,36,34))
 			#time.sleep(2)
 
 
@@ -306,24 +386,19 @@ def run_game():
 
 				# print legalWords[0][0], wordsWithScores[legalWords[0]]
 				# print legalWords[0][3], legalWords[0][4]
-				if(isRandomWalk == 0):
+				if(choice2 == 0):
 					print "Greedy!"
 					AIWord = legalWords[0]
-				elif(isRandomWalk == 1):
+				elif(choice2 == 1):
 					print isRandomWalk
 					print "Random Walk!"
 					AIWord = legalWords[random.randint(0,len(legalWords) - 1)]
 
 				else:
-					# print "Top Ten: "+str(legalWords[:10])
-					# print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
+					print "Top Ten: "+str(legalWords[:10])
+					print "Top Ten: "+str([wordsWithScores[x] for x in legalWords[:10]])
 
-					simStart = datetime.datetime.now()
-
-					AIWord = getBestWord(ourBoard, legalWords[:10], computerRack, bag)
-
-					simEnd = datetime.datetime.now()
-					simTimes.append((simEnd-simStart).microseconds)
+					AIWord = getBestWord(ourBoard, deepcopy(legalWords[:10]), computerRack, bag)
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
 
@@ -353,7 +428,7 @@ def run_game():
 					scoreComputer += wordsWithScores[AIWord][0]
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
 
-					#playerTurn = True
+					playerTurn = True
 					#if(len(bag) == 0): playerTurn = True
 					bag = computerRack.replenish(bag);
 
@@ -373,7 +448,7 @@ def run_game():
 						break
 					else:
 						canGoHomeNow = 1
-						#playerTurn = True
+						playerTurn = True
 						print "Computer: Can't possibly find a move.\nWaiting for Human's Response.\n"
 						continue
 				else:
@@ -385,7 +460,7 @@ def run_game():
 					bag = computerRack.replenish(bag) #Replenish Player's Rack after shuffle
 					bag += [x for x in toRemove]
 
-					#playerTurn = True
+					playerTurn = True
 
 					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
@@ -399,21 +474,14 @@ def run_game():
 		pygame.display.flip()
 
 	print "Stats for nerdz"
-	if(len(crossTimes)):
-		print "Average crosscheck time:", sum(crossTimes)/float(len(crossTimes))
-		print "Std deviation:", np.std(crossTimes)
-	if(len(genTimes)):
-		print "Average move gen time:", sum(genTimes)/float(len(genTimes))
-		print "Std deviation:", np.std(genTimes)
-	if(len(scoringTimes)):
-		print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
-		print "Std deviation:", np.std(scoringTimes)
-	if(len(simTimes)):
-		print "Average sim time:", sum(simTimes)/float(len(simTimes))
-		print "Std deviation:", np.std(simTimes)
-	if(len(moveTimes)):	
-		print "Average move time:", sum(moveTimes)/float(len(moveTimes))
-		print "Std deviation:", np.std(moveTimes)
+	print "Average crosscheck time:", sum(crossTimes)/float(len(crossTimes))
+	print "Std deviation:", np.std(crossTimes)
+	print "Average move gen time:", sum(genTimes)/float(len(genTimes))
+	print "Std deviation:", np.std(genTimes)
+	print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
+	print "Std deviation:", np.std(scoringTimes)
+	print "Average move time:", sum(moveTimes)/float(len(moveTimes))
+	print "Std deviation:", np.std(moveTimes)
 
 	if scoreComputer > scorePlayer:
 		res = "COMPUTER"
@@ -430,12 +498,13 @@ def run_game():
 			if event.type == pygame.QUIT: sys.exit()
 
 def main():
-	if len(sys.argv) != 2:
+	if len(sys.argv) != 3:
 		print "\nUsage: python "+sys.argv[0]+" 0",
 		print "or python "+sys.argv[0]+" 1\n"
 		sys.exit(1)
-	global isRandomWalk
-	isRandomWalk = int(sys.argv[1])
+	global choice1, choice2
+	choice1 = int(sys.argv[1])
+	choice2 = int(sys.argv[2])
 	run_game()
 
 if __name__ == '__main__':
