@@ -38,11 +38,17 @@ Input: Y/N ↩
 If you are unsatisfied with your current rack, you can discard some of your current tiles in exchange for new ones. To pass your turn without exchanging any tile, input Y and then press ↩ without entering any characters when prompted.
 
 #### 2. Word
-This is the complete primary word you would like to play (including the tiles already on the board). The program will check for validity of the word at this step and the move process will begin again if an unacceptable word is entered. Please find the list of acceptable words here: 
+Input: *sesquipedalophobia* ↩
+
+This is the complete primary word you would like to play (including the tiles already on the board). The program will check for validity of the word at this step and the move process will begin again if an unacceptable word is entered. We're using the standard English Scrabble lexicon.
 
 #### 3. Position
+Input: *row**column* ↩
+
 This is the position of the tile you'd like the place the first character of your tile on. Do this even if the tile corresponding to the first letter of your word is already on the board. The coordinates for each position can be derived from the displayed board.
 
-Input: <row><column>
-
 eg. 8h corresponds to the center tile
+
+#### 4. Across?
+Input: Y/N ↩
+Choose Y to play across the board, or N to play the word down the board.
