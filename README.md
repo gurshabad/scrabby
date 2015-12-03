@@ -2,7 +2,7 @@
 A bot which is better than you at Scrabble
 
 
-## 1. Setup from source
+## Setup from source
 1. Install dependencies
 
         
