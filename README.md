@@ -27,7 +27,7 @@ The command line argument specifies the bot you want to play against.
 * 1 -> Midas (plays greedily)
 * 2 -> Monty (with Monte Carlo lookahead simulations)
 
-Please give the game a few seconds to load. Take this time to think of all the big words your English teacher was trying to teach you while you wasted your time awkwardly sketched on your desk with your little pencil.
+Please give the game a few seconds to load. Take this time to think of all the big words your English teacher was trying to teach you while you wasted your time awkwardly sketching on your little desk with your little pencil.
 
 ## Gameplay
 The human player gets the advantage of playing first because we know you're going to lose anyway. For each move, the user interface will ask the following questions in the same order:
