@@ -52,3 +52,6 @@ eg. 8h corresponds to the center tile
 #### 4. Across?
 Input: Y/N ↩
 Choose Y to play across the board, or N to play the word down the board.
+
+## Misc.
+If you're using a system running on OSX, you can directly launch the game without the source code by downloading [these app files](https://github.com/MayankVachher/scrabby-MacApps).
