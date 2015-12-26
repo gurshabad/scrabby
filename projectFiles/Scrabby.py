@@ -415,6 +415,27 @@ def run_game():
 		print "Average move time:", sum(moveTimes)/float(len(moveTimes))
 		print "Std deviation:", np.std(moveTimes)
 
+	#apply endgame score rules
+	playerScoreLeftOver = 0
+	for tileLeft in playerRack.rack:
+		playerScoreLeftOver += tileLeft.getVal()
+
+	computerScoreLeftOver = 0
+	for tileLeft in computerRack.rack:
+		computerScoreLeftOver += tileLeft.getVal()
+
+	if len(playerRack.rack) == 0:
+		scorePlayer += computerScoreLeftOver
+	else:
+		scorePlayer -= playerScoreLeftOver
+
+	if len(computerRack.rack) == 0:
+		scoreComputer += playerScoreLeftOver
+	else:
+		scoreComputer -= computerScoreLeftOver
+
+	displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn)
+
 	if scoreComputer > scorePlayer:
 		res = "COMPUTER"
 		display_box(SCREEN, SECONDHALF, "COMPUTER WON!", (0, 102, 255))
