@@ -5,7 +5,7 @@ from rack import *
 from trie import *
 from inputbox import *
 
-def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard):
+def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard, blankTileIndex):
 	pos_r = sanitizedPosition[1]
 	pos_c = sanitizedPosition[0]
 
@@ -15,24 +15,31 @@ def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, B
 
 	if(playHorizontal):
 		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_c + idx][pos_r], BOARD)
+			renderTile(x, boardRectangles[pos_c + idx][pos_r], BOARD, idx in blankTileIndex)
 	else:
 		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_c][pos_r + idx ], BOARD)
+			renderTile(x, boardRectangles[pos_c][pos_r + idx ], BOARD, idx in blankTileIndex)
 	return True
 
-def renderTile(letter2play, square, BOARD):
+def renderTile(letter2play, square, BOARD, blankTileFlag):
 	FONTSMALL = pygame.font.SysFont('Andale Mono', 13)
 	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 8)
 	square = pygame.draw.rect(BOARD, (238, 228, 218), (square.topleft[0], square.topleft[1], square.width, square.height))
 	BOARD.blit(FONTSMALL.render(letter2play, 1, (50,50,50)),(square.topleft[0]+10, square.topleft[1]+5))
-	BOARD.blit(FONTSMALL2.render(str(Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
+	if(blankTileFlag is True):
+		BOARD.blit(FONTSMALL2.render(str(0), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
+	else:
+		BOARD.blit(FONTSMALL2.render(str(Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
 
 def renderRackTile(letter, score, square, SECONDHALF):
 	FONTSMALL = pygame.font.SysFont('Andale Mono', 27)
 	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 11)
 	square = pygame.draw.rect(SECONDHALF, (238, 228, 218), (square.topleft[0], square.topleft[1], square.width, square.height))
-	SECONDHALF.blit(FONTSMALL.render(letter, 1, (50,50,50)),(square.topleft[0]+9, square.topleft[1]+5))
+	if(letter == "*"):
+		SECONDHALF.blit(FONTSMALL.render(" ", 1, (50,50,50)),(square.topleft[0]+9, square.topleft[1]+5))
+	else:
+		SECONDHALF.blit(FONTSMALL.render(letter, 1, (50,50,50)),(square.topleft[0]+9, square.topleft[1]+5))
+
 	SECONDHALF.blit(FONTSMALL2.render(str(score), 1, (50,50,50)),(square.bottomright[0] - 15, square.bottomright[1] - 17))
 
 def sanitizePosition(pos):

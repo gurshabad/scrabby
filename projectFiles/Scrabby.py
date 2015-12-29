@@ -11,7 +11,9 @@ from copy import deepcopy
 from collections import OrderedDict
 import random
 
-allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
+allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
+testLetters = "eeeaaiiooonnnrrttllssuuddgbcmpfhvwykjxqz******"
+
 isRandomWalk = 0
 canGoHomeNow = 0
 
@@ -30,7 +32,7 @@ def run_game():
 	playerRack = Rack()
 	computerRack = Rack()
 
-	bag = [ letter for letter in allLetters ]
+	bag = [ letter for letter in testLetters ]
 
 	bag = playerRack.replenish(bag)
 	bag = computerRack.replenish(bag)
@@ -194,13 +196,13 @@ def run_game():
 				#Check for valid move here
 				current = validityCheck(motion[3], ourBoard, motion[2], motion[1], playerRack)
 
-				if not (current):
+				if not (current[0]):
 					print "Error. Invalid Move.\n\n"
 					display_box(SCREEN, SECONDHALF, "Invalid Move!", (139,0,0))
 					time.sleep(2)
 					continue
 				else:
-					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
+					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard, current[1])
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -211,7 +213,7 @@ def run_game():
 
 					print "Before player move:"
 					playerRack.showRack()
-					playerRack = removeTiles(playerRack, current)
+					playerRack = removeTiles(playerRack, current[0])
 
 					#need to call scoreThisMove before playerMove function is called because the latter sets tile to occupied
 					scorePlayer += scoreThisMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #calculate score of the move
@@ -327,12 +329,12 @@ def run_game():
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
 
-				if not current:
+				if not current[0]:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard, current[1])
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -343,7 +345,7 @@ def run_game():
 					print "Before Computer Move:"
 					computerRack.showRack()
 
-					computerRack = removeTiles(computerRack, current)
+					computerRack = removeTiles(computerRack, current[0])
 
 					print "\nAI played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]

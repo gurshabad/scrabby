@@ -54,10 +54,13 @@ def computeLeaves(word, pos, isAcross, rack, board):
 		if( current[idx].getChar() == '_'):  #If blank position
 			if (letter in rackCopy): #Check if we even have the letter in our rack.
 				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
+			elif ("*" in rackCopy):
+				rackCopy.remove("*")
 	score = 0
 
 	for letter in rackCopy:
-		score += leaves[letter.upper()]
+		if letter != "*":
+			score += leaves[letter.upper()]
 
 	return score
 
@@ -81,15 +84,14 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 
 		current = validityCheck(simLookUp[2], ourBoard, simLookUp[1], simLookUp[0], copy_computerRack)
 		changedPositions = playerMove(ply0Copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change - fixed
-		copy_computerRack = removeTiles(copy_computerRack, current) #change - not fixed
+		copy_computerRack = removeTiles(copy_computerRack, current[0]) #change - not fixed
 		copy_bag = copy_computerRack.replenish(copy_bag)
 
 		# crossCheckResetData = saveCrossCheckBits(copy_ourBoard)
 		setCrossCheckBits(ply0Copy_ourBoard, wordListTrie) #change 
 
 		pointDifferentials = []
-		for x in xrange(10):  #What Quackle does 300 times.
-
+		for x in xrange(20):  #What Quackle does 300 times.
 
 			simRack = Rack()
 			copy_bag = simRack.replenish(copy_bag)
@@ -379,6 +381,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	deleteThis = []
 
 	anchorFlag = False
+	blankTileIndexList = []
 
 	#Check 2: Check if we even have the letters not on the board on our rack.
 	#Check 3: Check if letters on the board line up with letters in the word.
@@ -391,8 +394,15 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 			anchorFlag = current[idx].isAnchor
 		if( current[idx].getChar() == '_'):  #If blank position
 			if (letter not in rackCopy): #Check if we even have the letter in our rack.
-				print "Uh oh #2 Invalid move."
-				return False
+
+				if( "*" not in rackCopy):
+					print "Uh oh #2 Invalid move."
+					return False
+				else:
+					rackCopy.remove("*")
+					deleteThis.append("*")
+					blankTileIndexList.append(idx)
+
 			else:
 				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
 				deleteThis.append(letter)
@@ -418,7 +428,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 		return False
 
 	#Return list of letters to be removed from the rack.
-	return ''.join(deleteThis)
+	return (''.join(deleteThis), blankTileIndexList)
 
 def undoPlayerMove(board, changedPositions):
 
@@ -761,6 +771,11 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 						rack.remove(child)
 						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
+				elif "*" in rack:
+					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove("*")
+						extendRightBeta(board, rowIdx, rack, leftBit + child, currentNode.children[child], anchorSquare, legalWords)
+						rack.append("*")
 
 		#Case 2: Left of anchor square vacant
 		else:
@@ -775,11 +790,16 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 
 			#For each tile playable on anchorSquare
 			for child in currentNode.children:
-				if child in rack: 
+				if child in rack:
 					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
 						rack.remove(child)
 						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
+				elif "*" in rack:
+					if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove("*")
+						extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
+						rack.append("*")
 
 			#If we can create even more leftParts
 			if limit > 0:
@@ -788,6 +808,10 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 						rack.remove(child)
 						leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
 						rack.append(child)
+					elif "*" in rack:
+						rack.remove("*")
+						leftPart( board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
+						rack.append("*")
 
 	#Case 3: Nothing to the left of anchor square.
 	else:
@@ -797,6 +821,11 @@ def leftPart(board, rowIdx, rack, partialWord, currentNode, anchorSquare, limit,
 					rack.remove(child)
 					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 					rack.append(child)
+			elif "*" in rack:
+				if board[rowIdx][anchorSquare].acrossCrossCheck[ord(child)-ord('a')] == True:
+					rack.remove("*")
+					extendRightBeta(board, rowIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
+					rack.append("*")
 
 #extendRightBeta notes-
 #The below function considers the situation at each step where:
@@ -830,6 +859,11 @@ def extendRightBeta(board, rowIdx, rack, partialWord, currentNode, square, legal
 						rack.remove(child)
 						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords)
 						rack.append(child)
+				elif "*" in rack:
+					if board[rowIdx][square+1].acrossCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
+						rack.remove("*")
+						extendRightBeta(board, rowIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords)
+						rack.append("*")
 
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
@@ -873,6 +907,11 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 						rack.remove(child)
 						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
+				elif "*" in rack: 
+					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove("*")
+						extendDownBeta(board, colIdx, rack, upBit + child, currentNode.children[child], anchorSquare, legalWords)
+						rack.append("*")
 
 		#Case 2: Above of anchor square vacant
 		else:
@@ -892,13 +931,21 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 						rack.remove(child)
 						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 						rack.append(child)
-
+				elif "*" in rack:
+					if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+						rack.remove("*")
+						extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
+						rack.append("*")
 			if limit > 0:
 				for child in currentNode.children:
 					if child in rack:
 						rack.remove(child)
 						upperPart( board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
 						rack.append(child)
+					elif "*" in rack:
+						rack.remove("*")
+						upperPart( board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, limit-1, legalWords)
+						rack.append("*")
 
 	else:
 
@@ -908,6 +955,11 @@ def upperPart(board, colIdx, rack, partialWord, currentNode, anchorSquare, limit
 					rack.remove(child)
 					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
 					rack.append(child)
+			elif "*" in rack:
+				if board[anchorSquare][colIdx].downCrossCheck[ord(child)-ord('a')] == True:
+					rack.remove("*")
+					extendDownBeta(board, colIdx, rack, partialWord + child, currentNode.children[child], anchorSquare, legalWords)
+					rack.append("*")
 
 
 #extendRightBeta notes-
@@ -941,7 +993,11 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 						rack.remove(child)
 						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords)
 						rack.append(child)
-
+				elif "*" in rack:
+					if board[square+1][colIdx].downCrossCheck[ord(child)-ord('a')] == True:  #and it can be legally placed on the next square.
+						rack.remove("*")
+						extendDownBeta(board, colIdx, rack,partialWord + child, currentNode.children[child], square + 1, legalWords)
+						rack.append("*")
 		#Case 2.2: If square next to where we want to place letter from currentNode on is full. Hey, no worries!
 		#Just check if playing the occupying letter after currentNode will give us some valid prefix 
 		else:
@@ -950,7 +1006,9 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 
 
 
-allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
+allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
+testLetters = "eeeaaiiooonnnrrttllssuuddgbcmpfhvwykjxqz******"
+
 
 occupiedMatrix = [[0] * 15] * 15
 
@@ -976,6 +1034,7 @@ def getClashes(r, c, word, occupiedMatrix):
 
 
 #Below is a honorable sandbox to play with extendLeft and extendRightBeta
+
 def main():
 
 	ourBoard = TheBoard()
@@ -984,7 +1043,7 @@ def main():
 	playerRack = Rack()
 	computerRack = Rack()
 
-	bag = [ letter for letter in allLetters ]
+	bag = [ letter for letter in testLetters ]
 
 	bag = playerRack.replenish(bag);
 	bag = computerRack.replenish(bag);
@@ -993,7 +1052,6 @@ def main():
 	print "You get to move first! Here is your rack"
 
 	while(len(bag)):
-
 
 
 		ourBoard.board[7][7].isAnchor = True
@@ -1007,7 +1065,6 @@ def main():
 			bag = playerRack.replenish(bag)
 
 			playerRack.showRack()
-
 
 			print "Enter number of tiles you wanna play:"
 			wordLength = input()
@@ -1029,19 +1086,20 @@ def main():
 			r,c = start[0],start[1]
 
 			#Validity checking.
-			current = validityCheck(isAcross, ourBoard, (c,r), word, playerRack)
+			current = validityCheck(isAcross, ourBoard, (c,r), word, playerRack) #Change this function for blank tile.
 
-			if not current:
+			if not current[0]:
 				print "Try again."
 				continue
 			else:
-				playerRack = removeTiles(playerRack, current)
-				playerMove(ourBoard, word, (c,r), isAcross)
+				playerRack = removeTiles(playerRack, current[0]) #Change this function for blank tile. 
+				playerMove(ourBoard, word, (c,r), isAcross) #Change this function for blank tile.
 				playerTurn = False
 				ourBoard.printBoard()
 
+			playerRack.showRack()
+
 		while(not playerTurn):
-			#Add AI moves here
 
 			setCrossCheckBits(ourBoard, wordListTrie)
 
@@ -1049,45 +1107,37 @@ def main():
 
 			computerRack.showRack()
 
-
-			# playerTurn = True
-			# continue
-
 			rack = [ i.letter for i in computerRack.rack]
 
-			anchorSquare = 6
+			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
-			leftPart(ourBoard.board, 7, rack, '', wordListTrie.root, anchorSquare, 4, legalWords)
 
-			print legalWords
+			#Generate all across moves
+			for rowIdx, row in enumerate(ourBoard.board):
 
-			#List of 4-tuples: (word, pos, isAcross)			
-			# # legalWords = []
+				prevAnchor = -1
+				for idx, sq in enumerate(row):
+					if sq.isAnchor:
 
-			# # #Generate all across moves
-			# # for rowIdx, row in enumerate(ourBoard.board):
-			# # 	for idx, sq in enumerate(row):
-			# # 		prevAnchor = -1
-			# # 		if sq.isAnchor:
+						limit = min(idx, idx-prevAnchor-1)
+						anchorSquare = idx
+						prevAnchor = anchorSquare
 
-			# # 			limit = min(idx, idx-prevAnchor-1)
-			# # 			anchorSquare = idx
-			# # 			prevAnchor = anchorSquare
+						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
-			# # 			leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+			#Generate all down moves
+			for colIdx in xrange(len(ourBoard.board)):
 
-			# #Generate all down moves
-			# for colIdx in xrange(len(ourBoard.board)):
-			# 	for rowIdx in xrange(len(ourBoard.board)):
-			# 		prevAnchor = -1
-			# 		sq = ourBoard.board[rowIdx][colIdx]
-			# 		if sq.isAnchor:
+				prevAnchor = -1
+				for rowIdx in xrange(len(ourBoard.board)):
+					sq = ourBoard.board[rowIdx][colIdx]
+					if sq.isAnchor:
 
-			# 			limit = min(rowIdx, rowIdx-prevAnchor-1)
-			# 			anchorSquare = rowIdx
-			# 			prevAnchor = anchorSquare
+						limit = min(rowIdx, rowIdx-prevAnchor-1)
+						anchorSquare = rowIdx
+						prevAnchor = anchorSquare
 
-			# 			upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
 	
 
 			random.shuffle(legalWords)
@@ -1095,14 +1145,16 @@ def main():
 			if(len(legalWords)):
 				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
 
-				if not current:
+				if not current[0]:
 					print "Try again."
 					continue
 				else:
-					computerRack = removeTiles(computerRack, current)
+					computerRack = removeTiles(computerRack, current[0])
 					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
 					playerTurn = True
 					ourBoard.printBoard()
+
+				computerRack.showRack()
 
 			else:
 				playerTurn = True

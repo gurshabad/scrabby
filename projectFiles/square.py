@@ -16,10 +16,14 @@ class Square:
 		self.acrossCrossCheck = []
 		self.downCrossSum = 0
 		self.acrossCrossSum = 0
+		
 		for _ in range(26):
-			self.downCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in a down move. 
+			self.downCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in a down move.
+		self.downCrossCheck.append(False) #To avoid playing the special trie EOW character '{' 
 		for _ in range(26):
 			self.acrossCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in an across move.
+		self.acrossCrossCheck.append(False) #To avoid playing the special trie EOW character '{' 
+
 		self.special = 0
 		self.tile = Tile()
 

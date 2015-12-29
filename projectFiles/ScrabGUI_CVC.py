@@ -11,7 +11,9 @@ from copy import deepcopy
 from collections import OrderedDict
 import random
 
-allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz"
+allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
+testLetters = "aaeessllnn****"
+
 choice1 = 0
 choice2 = 0
 canGoHomeNow = 0
@@ -180,6 +182,7 @@ def run_game():
 			#time.sleep(2)
 
 			rack = [tile.letter for tile in playerRack.rack]
+			playerRack.showRack()
 
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
@@ -246,12 +249,12 @@ def run_game():
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], playerRack)
 
-				if not current:
+				if not current[0]:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard, current[1])
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -262,7 +265,7 @@ def run_game():
 					print "Before "+P1+" Move:"
 					playerRack.showRack()
 
-					playerRack = removeTiles(playerRack, current)
+					playerRack = removeTiles(playerRack, current[0])
 
 					print "\n"+P1+" played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]
@@ -408,12 +411,12 @@ def run_game():
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
 
-				if not current:
+				if not current[0]:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard, current[1])
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -424,7 +427,7 @@ def run_game():
 					print "Before "+P2+" Move:"
 					computerRack.showRack()
 
-					computerRack = removeTiles(computerRack, current)
+					computerRack = removeTiles(computerRack, current[0])
 
 					print "\n"+P2+" played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]
@@ -479,15 +482,16 @@ def run_game():
 
 		pygame.display.flip()
 
-	print "Stats for nerdz"
-	print "Average crosscheck time:", sum(crossTimes)/float(len(crossTimes))
-	print "Std deviation:", np.std(crossTimes)
-	print "Average move gen time:", sum(genTimes)/float(len(genTimes))
-	print "Std deviation:", np.std(genTimes)
-	print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
-	print "Std deviation:", np.std(scoringTimes)
-	print "Average move time:", sum(moveTimes)/float(len(moveTimes))
-	print "Std deviation:", np.std(moveTimes)
+	if(len(crossTimes) and len(genTimes) and len(scoringTimes) and len(moveTimes)):
+		print "Stats for nerdz"
+		print "Average crosscheck time:", sum(crossTimes)/float(len(crossTimes))
+		print "Std deviation:", np.std(crossTimes)
+		print "Average move gen time:", sum(genTimes)/float(len(genTimes))
+		print "Std deviation:", np.std(genTimes)
+		print "Average scoring time:", sum(scoringTimes)/float(len(scoringTimes))
+		print "Std deviation:", np.std(scoringTimes)
+		print "Average move time:", sum(moveTimes)/float(len(moveTimes))
+		print "Std deviation:", np.std(moveTimes)
 
 	if scoreComputer > scorePlayer:
 		display_box(SCREEN, SECONDHALF, P2.upper()+" WON!", (0, 102, 255))

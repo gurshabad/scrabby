@@ -9,7 +9,7 @@ class Tile:
 
 	def setVal(self, l):
 		if l in "_": return -1
-		if l in " ": return 0
+		if l in "*": return 0
 		if l in "aeilnorstuAEILNORSTU": return 1
 		if l in "dgDG": return 2
 		if l in "bcmpBCMP": return 3

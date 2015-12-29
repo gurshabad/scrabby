@@ -19,7 +19,7 @@ class Rack:
 		else:
 			print "Letter:\t",
 			for x in self.rack:
-				if x.letter == " ": print "blank tile",
+				if x.letter == "*": print "blank tile",
 				else: print x.letter,
 			print "\nScore:\t",
 			for x in self.rack:
