@@ -175,7 +175,7 @@ def run_game():
 
 			setCrossCheckBits(ourBoard, wordListTrie)
 
-			if(justStartAlready): ask(SCREEN, SECONDHALF, "Start?"); justStartAlready = False #Get Info from Player
+			if(justStartAlready): inputbox.ask(SCREEN, SECONDHALF, "Start?"); justStartAlready = False #Get Info from Player
 
 			inputbox.display_box(SCREEN, SECONDHALF, P1.upper()+"'S TURN!", (160,36,34))
 			#time.sleep(2)
