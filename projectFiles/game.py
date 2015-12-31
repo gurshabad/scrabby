@@ -338,12 +338,12 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	if(isAcross):
 		if(c+len(word) > 15): 
 			print "Uh oh #1 Invalid move."
-			return False
+			return (False, blankTileIndexList)
 
 	else:
 		if(r+len(word) > 15): 
 			print "Uh oh #1 Invalid move."
-			return False
+			return (False, blankTileIndexList)
 
 	#word = word.lower()
 	#print word
@@ -377,7 +377,7 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 
 				if( "*" not in rackCopy):
 					print "Uh oh #2 Invalid move."
-					return False
+					return (False, blankTileIndexList)
 				else:
 					rackCopy.remove("*")
 					deleteThis.append("*")
@@ -390,22 +390,22 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 			if(isAcross):
 				if not current[idx].acrossCrossCheck[ord(letter)-ord('a')]:
 					print "Uh oh #5 Invalid move. Extra nonsense words."
-					return False
+					return (False, blankTileIndexList)
 			else:
 				if not current[idx].downCrossCheck[ord(letter)-ord('a')]:
 					print "Uh oh #5 Invalid move. Extra nonsense words."
-					return False
+					return (False, blankTileIndexList)
 				
 
 		elif(current[idx].getChar() != letter): #If not blank position but letter does not match.
 			print "Uh oh #3 Invalid move."
-			return False
+			return (False, blankTileIndexList)
 
 		#If not blank and letter matches, just continue cuz everything is chill.
 
 	if not anchorFlag:
 		print "Uh oh #4 Invalid move."
-		return False
+		return (False, blankTileIndexList)
 
 	#Return list of letters to be removed from the rack.
 	return (''.join(deleteThis), blankTileIndexList)
@@ -544,6 +544,7 @@ def scoreThisMove(board, word, pos, isAcross):
 	else:
 		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
 
+	print current
 	for i in range(len(word)):
 		if current[i].getChar() == '_':
 			current[i].setTileVal(tile.Tile(word[i]))
@@ -963,7 +964,7 @@ def main():
 	playerRack = rack.Rack()
 	computerRack = rack.Rack()
 
-	bag = [ letter for letter in testLetters ]
+	bag = [ letter for letter in allLetters ]
 
 	bag = playerRack.replenish(bag);
 	bag = computerRack.replenish(bag);
