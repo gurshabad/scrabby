@@ -1,8 +1,7 @@
 import pygame, time
 import trie
 import tile
-import rack
-from inputbox import *
+import inputbox
 
 def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard, blankTileIndex):
 	pos_r = sanitizedPosition[1]
@@ -139,13 +138,13 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 
 	playerRack.showRack()
 
-	shuffle = ask(SCREEN, SECONDHALF, "SHUFFLE? (YES/NO)")
+	shuffle = inputbox.ask(SCREEN, SECONDHALF, "SHUFFLE? (YES/NO)")
 	if(len(shuffle) != 0): shuffle = shuffle.upper()[0]
 	if(shuffle == 'Y' or shuffle == 'N'):
 		if(shuffle == 'Y'):
 			shuffle = True
 
-			shuffleLetters = ask(SCREEN, SECONDHALF, "LETTERS:")
+			shuffleLetters = inputbox.ask(SCREEN, SECONDHALF, "LETTERS:")
 			if(verifyShuffle(shuffleLetters, playerRack)):
 				return ("Shuffle", shuffleLetters.lower())
 
@@ -160,17 +159,17 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 		else:
 			shuffle = False
 
-			wordPlayed = ask(SCREEN, SECONDHALF, "WORD?")
+			wordPlayed = inputbox.ask(SCREEN, SECONDHALF, "WORD?")
 			if(wordListTrie.query(wordPlayed.lower())): #Check if legit word
 				print "Word? " + wordPlayed
 				
-				positionPlayed = ask(SCREEN, SECONDHALF, "POSITION? (ROW COL)")
+				positionPlayed = inputbox.ask(SCREEN, SECONDHALF, "POSITION? (ROW COL)")
 				sanitizedPos = sanitizePosition(positionPlayed)
 				if(sanitizedPos != False): #Check if legit position
 					print "Position? " + positionPlayed
 					print "After Sanitization: "+str(sanitizedPos)
 
-					playHorizontal = ask(SCREEN, SECONDHALF, "ACROSS? (YES/NO)")
+					playHorizontal = inputbox.ask(SCREEN, SECONDHALF, "ACROSS? (YES/NO)")
 					playHorizontal = (playHorizontal).upper()
 					if(playHorizontal != "YES" and playHorizontal != "NO" and playHorizontal != "Y" and playHorizontal != "N"):
 						print "Across? WEIRD INPUT"

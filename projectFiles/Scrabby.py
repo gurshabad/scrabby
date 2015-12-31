@@ -1,14 +1,14 @@
-import sys, pygame, time, datetime
+import sys, pygame, random, time, datetime
 import numpy as np
+
 import board
-import tile
 import rack
-from inputbox import *
+import inputbox
+
 from helpers import *
 from game import *
 from copy import deepcopy
 from collections import OrderedDict
-import random
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
 testLetters = "eeeaaiiooonnnrrttllssuuddgbcmpfhvwykjxqz******"
@@ -187,7 +187,7 @@ def run_game():
 				playerRack.showRack()
 
 				bag += [x for x in motion[1]]
-				display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+				inputbox.display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 				time.sleep(2)
 				displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
 
@@ -197,7 +197,7 @@ def run_game():
 
 				if not (current[0]):
 					print "Error. Invalid Move.\n\n"
-					display_box(SCREEN, SECONDHALF, "Invalid Move!", (139,0,0))
+					inputbox.display_box(SCREEN, SECONDHALF, "Invalid Move!", (139,0,0))
 					time.sleep(2)
 					continue
 				else:
@@ -206,7 +206,7 @@ def run_game():
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
 					print "Move Success!\n\n"
-					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(2)
 					#current = motion[1]
 
@@ -240,7 +240,7 @@ def run_game():
 
 			crossTimes.append((crossEnd-crossStart).microseconds)
 
-			display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
+			inputbox.display_box(SCREEN, SECONDHALF, "COMPUTER'S TURN!", (160,36,34))
 			#time.sleep(2)
 
 
@@ -251,32 +251,7 @@ def run_game():
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
 
-			#Generate all across moves
-			for rowIdx, row in enumerate(ourBoard.board):
-
-				prevAnchor = -1
-				for idx, sq in enumerate(row):
-					if sq.isAnchor:
-
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
-
-						leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
-
-			#Generate all down moves
-			for colIdx in xrange(len(ourBoard.board)):
-
-				prevAnchor = -1
-				for rowIdx in xrange(len(ourBoard.board)):
-					sq = ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
-
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
-
-						upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
+			generateAllMoves(ourBoard, rackLetters, wordListTrie, legalWords)
 
 			genEnd = datetime.datetime.now()
 
@@ -338,7 +313,7 @@ def run_game():
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
 					print "Move Success!\n\n"
-					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
 					print "Before Computer Move:"
@@ -349,7 +324,6 @@ def run_game():
 					print "\nAI played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]
 					print
-
 
 					scoreComputer += wordsWithScores[AIWord][0]
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
@@ -388,7 +362,7 @@ def run_game():
 
 					playerTurn = True
 
-					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
 
@@ -439,12 +413,12 @@ def run_game():
 
 	if scoreComputer > scorePlayer:
 		res = "COMPUTER"
-		display_box(SCREEN, SECONDHALF, "COMPUTER WON!", (0, 102, 255))
+		inputbox.display_box(SCREEN, SECONDHALF, "COMPUTER WON!", (0, 102, 255))
 	elif scorePlayer > scoreComputer:
 		res = "PLAYER"
-		display_box(SCREEN, SECONDHALF, "PLAYER WON!", (0, 102, 255))
+		inputbox.display_box(SCREEN, SECONDHALF, "PLAYER WON!", (0, 102, 255))
 	else:
-		display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
+		inputbox.display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
 
 	#sys.exit(0)
 	while True:

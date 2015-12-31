@@ -1,14 +1,14 @@
-import sys, pygame, time, datetime
+import sys, pygame, random, time, datetime
 import numpy as np
+
 import board
-import tile
 import rack
-from inputbox import *
+import inputbox
+
 from helpers import *
 from game import *
 from copy import deepcopy
 from collections import OrderedDict
-import random
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
 testLetters = "aaeessllnn****"
@@ -177,7 +177,7 @@ def run_game():
 
 			if(justStartAlready): ask(SCREEN, SECONDHALF, "Start?"); justStartAlready = False #Get Info from Player
 
-			display_box(SCREEN, SECONDHALF, P1.upper()+"'S TURN!", (160,36,34))
+			inputbox.display_box(SCREEN, SECONDHALF, P1.upper()+"'S TURN!", (160,36,34))
 			#time.sleep(2)
 
 			rackLetters = [tile.letter for tile in playerRack.rack]
@@ -186,32 +186,7 @@ def run_game():
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
 
-			#Generate all across moves
-			for rowIdx, row in enumerate(ourBoard.board):
-
-				prevAnchor = -1
-				for idx, sq in enumerate(row):
-					if sq.isAnchor:
-
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
-
-						leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
-
-			#Generate all down moves
-			for colIdx in xrange(len(ourBoard.board)):
-
-				prevAnchor = -1
-				for rowIdx in xrange(len(ourBoard.board)):
-					sq = ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
-
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
-
-						upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
+			generateAllMoves(ourBoard, rackLetters, wordListTrie, legalWords)
 
 			if(len(legalWords)):
 
@@ -258,7 +233,7 @@ def run_game():
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
 					print "Move Success!\n\n"
-					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
 					print "Before "+P1+" Move:"
@@ -309,7 +284,7 @@ def run_game():
 
 					playerTurn = False
 
-					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
 
@@ -328,7 +303,7 @@ def run_game():
 
 			crossTimes.append((crossEnd-crossStart).microseconds)
 
-			display_box(SCREEN, SECONDHALF, P2.upper()+"'S TURN!", (160,36,34))
+			inputbox.display_box(SCREEN, SECONDHALF, P2.upper()+"'S TURN!", (160,36,34))
 			#time.sleep(2)
 
 
@@ -339,32 +314,7 @@ def run_game():
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
 
-			#Generate all across moves
-			for rowIdx, row in enumerate(ourBoard.board):
-
-				prevAnchor = -1
-				for idx, sq in enumerate(row):
-					if sq.isAnchor:
-
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
-
-						leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
-
-			#Generate all down moves
-			for colIdx in xrange(len(ourBoard.board)):
-
-				prevAnchor = -1
-				for rowIdx in xrange(len(ourBoard.board)):
-					sq = ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
-
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
-
-						upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
+			generateAllMoves(ourBoard, rackLetters, wordListTrie, legalWords)
 
 			genEnd = datetime.datetime.now()
 
@@ -420,7 +370,7 @@ def run_game():
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
 					print "Move Success!\n\n"
-					display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
 					print "Before "+P2+" Move:"
@@ -470,7 +420,7 @@ def run_game():
 
 					playerTurn = True
 
-					display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
+					inputbox.display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
 					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
 
@@ -493,11 +443,11 @@ def run_game():
 		print "Std deviation:", np.std(moveTimes)
 
 	if scoreComputer > scorePlayer:
-		display_box(SCREEN, SECONDHALF, P2.upper()+" WON!", (0, 102, 255))
+		inputbox.display_box(SCREEN, SECONDHALF, P2.upper()+" WON!", (0, 102, 255))
 	elif scorePlayer > scoreComputer:
-		display_box(SCREEN, SECONDHALF, P1.upper()+" WON!", (0, 102, 255))
+		inputbox.display_box(SCREEN, SECONDHALF, P1.upper()+" WON!", (0, 102, 255))
 	else:
-		display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
+		inputbox.display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))
 
 	#sys.exit(0)
 	while True:

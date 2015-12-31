@@ -5,16 +5,16 @@
 
 #List ends
 
-import trie
-import board
-import tile
-import rack
-from helpers import *
-import random
+import string, random, datetime
 import numpy as np
 from copy import deepcopy
 from collections import OrderedDict
 
+import board
+import tile
+import rack
+
+from helpers import *
 
 #For benchmarking:
 def memory_usage():
@@ -64,6 +64,36 @@ def computeLeaves(word, pos, isAcross, rack, board):
 
 	return score
 
+def generateAllMoves(ourBoard, rackLetters, wordListTrie, legalWords):
+
+	#Generate all across moves
+	for rowIdx, row in enumerate(ourBoard.board):
+
+		prevAnchor = -1
+		for idx, sq in enumerate(row):
+			if sq.isAnchor:
+
+				limit = min(idx, idx-prevAnchor-1)
+				anchorSquare = idx
+				prevAnchor = anchorSquare
+
+				leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+	#Generate all down moves
+	for colIdx in xrange(len(ourBoard.board)):
+
+		prevAnchor = -1
+		for rowIdx in xrange(len(ourBoard.board)):
+			sq = ourBoard.board[rowIdx][colIdx]
+			if sq.isAnchor:
+
+				limit = min(rowIdx, rowIdx-prevAnchor-1)
+				anchorSquare = rowIdx
+				prevAnchor = anchorSquare
+
+				upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
+
+
 
 def getBestWord(ourBoard, legalWords, computerRack, bag, wordListTrie):
 
@@ -104,32 +134,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag, wordListTrie):
 			#List of 3-tuples: (word, pos, isAcross)			
 			genWords = []
 
-			#Generate all across moves
-			for rowIdx, row in enumerate(ply0Copy_ourBoard.board):
-
-				prevAnchor = -1
-				for idx, sq in enumerate(row):
-					if sq.isAnchor:
-
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
-
-						leftPart(ply0Copy_ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
-
-			#Generate all down moves
-			for colIdx in xrange(len(ply0Copy_ourBoard.board)):
-
-				prevAnchor = -1
-				for rowIdx in xrange(len(ply0Copy_ourBoard.board)):
-					sq = ply0Copy_ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
-
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
-
-						upperPart(ply0Copy_ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
+			generateAllMoves(ply0Copy_ourBoard, rackLetters, wordListTrie, genWords)
 
 			if(len(genWords)):
 
@@ -156,38 +161,13 @@ def getBestWord(ourBoard, legalWords, computerRack, bag, wordListTrie):
 			else:
 				ply1Score = 0
 
-
 			#For simulated ply2 moves by AI
 			#Generate all across moves
 			setCrossCheckBits(ply1Copy_ourBoard, wordListTrie) #change 
 
 			genWords = []
 
-			for rowIdx, row in enumerate(ply1Copy_ourBoard.board):
-
-				prevAnchor = -1
-				for idx, sq in enumerate(row):
-					if sq.isAnchor:
-
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
-
-						leftPart(ply1Copy_ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
-
-			#Generate all down moves
-			for colIdx in xrange(len(ply1Copy_ourBoard.board)):
-
-				prevAnchor = -1
-				for rowIdx in xrange(len(ply1Copy_ourBoard.board)):
-					sq = ply1Copy_ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
-
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
-
-						upperPart(ply1Copy_ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
+			generateAllMoves(ply1Copy_ourBoard, rackLetters, wordListTrie, genWords)
 
 			if(len(genWords)):
 
@@ -685,15 +665,6 @@ def scoreThisMove(board, word, pos, isAcross):
 	return finalScore
 
 
-import string, random
-import datetime
-
-#Trie construction done
-
-###########
-#TO-DO: Construct DAWG from Trie
-###########
-
 
 #Implementation of back-tracking algorithms presented in the paper 'The World's Fastest Scrabble Program' by Appel and Jacobson
 #https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf
@@ -1001,10 +972,13 @@ def main():
 	playerTurn = True
 	print "You get to move first! Here is your rack"
 
+	firstMoveFlag = True
+
 	while(len(bag)):
 
-
-		ourBoard.board[7][7].isAnchor = True
+		if(firstMoveFlag == True):
+			ourBoard.board[7][7].isAnchor = True
+			firstMoveFlag = False
 
 
 		while(playerTurn):
@@ -1062,33 +1036,7 @@ def main():
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
 
-			#Generate all across moves
-			for rowIdx, row in enumerate(ourBoard.board):
-
-				prevAnchor = -1
-				for idx, sq in enumerate(row):
-					if sq.isAnchor:
-
-						limit = min(idx, idx-prevAnchor-1)
-						anchorSquare = idx
-						prevAnchor = anchorSquare
-
-						leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
-
-			#Generate all down moves
-			for colIdx in xrange(len(ourBoard.board)):
-
-				prevAnchor = -1
-				for rowIdx in xrange(len(ourBoard.board)):
-					sq = ourBoard.board[rowIdx][colIdx]
-					if sq.isAnchor:
-
-						limit = min(rowIdx, rowIdx-prevAnchor-1)
-						anchorSquare = rowIdx
-						prevAnchor = anchorSquare
-
-						upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
-	
+			generateAllMoves(ourBoard, rackLetters, wordListTrie, legalWords)
 
 			random.shuffle(legalWords)
 

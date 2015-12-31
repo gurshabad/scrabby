@@ -1,7 +1,6 @@
 from pprint import pprint
 from termcolor import cprint, colored
-from tile import *
-from square import *
+import square
 
 class TheBoard:
 	"""The Scrabble Board Class"""
@@ -18,7 +17,7 @@ class TheBoard:
 		for rows in range(self.i):
 			self.board.append([])
 			for cols in range(self.j):
-				self.board[rows].append(Square())
+				self.board[rows].append(square.Square())
 
 		TW = [(0,0), (0,7), (0,14), (7,0), (7,14), (14,0), (14,7), (14,14)]
 		DW = [(1,1), (1,13), (2,2), (2,12), (3,3), (3,11), (4,4), (4,10), (7,7), (10,4), (10,10), (11,3), (11,11), (12,2), (12,12), (13,1), (13,13)]
