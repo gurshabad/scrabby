@@ -1,4 +1,4 @@
-from tile import *
+import tile
 from random import shuffle
 
 class Rack:
@@ -36,7 +36,7 @@ class Rack:
 		self.numOfTiles = self.numOfTiles + len(letters)
 
 		for letter in letters:
-			self.rack.append(Tile(letter))
+			self.rack.append(tile.Tile(letter))
 
 		return bag[needed:]
 

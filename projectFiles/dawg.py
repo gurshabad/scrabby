@@ -90,18 +90,6 @@ class Dawg:
 			count += len(node.edges)
 		return count
 
-dawg = Dawg()
-WordCount = 0
-words = open(sys.argv[1], 'rt').read().split()
-words.sort()
-start = time.time()
-for word in words:
-	WordCount += 1
-	dawg.insert(word)
-dawg.finish()
-print "Dawg creation took %g s" % (time.time() - start)
-frontier = [dawg.root]
-
 def traverse(edges, uptillnow):
 	# print edges
 	if(len(edges)):
@@ -110,10 +98,24 @@ def traverse(edges, uptillnow):
 				print uptillnow+_
 				traverse(edges[_].edges, uptillnow+_)
 
-traverse(dawg.root.edges, "")
-print dawg.lookup("catni")
-# while(len(frontier)):
-# 	print frontier[0].edges
-# 	for _ in frontier[0].edges:
-# 		frontier.append(frontier[0].edges[_])
-# 	frontier = frontier[1:]
+if __name__ == '__main__':
+
+	dawg = Dawg()
+	WordCount = 0
+	words = open(sys.argv[1], 'rt').read().split()
+	words.sort()
+	start = time.time()
+	for word in words:
+		WordCount += 1
+		dawg.insert(word)
+	dawg.finish()
+	print "Dawg creation took %g s" % (time.time() - start)
+	frontier = [dawg.root]
+
+	traverse(dawg.root.edges, "")
+	print dawg.lookup("catnip")
+	# while(len(frontier)):
+	# 	print frontier[0].edges
+	# 	for _ in frontier[0].edges:
+	# 		frontier.append(frontier[0].edges[_])
+	# 	frontier = frontier[1:]

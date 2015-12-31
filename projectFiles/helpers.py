@@ -1,8 +1,7 @@
 import pygame, time
-from gen_board import *
-from tile import *
-from rack import *
-from trie import *
+import trie
+import tile
+import rack
 from inputbox import *
 
 def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard, blankTileIndex):
@@ -29,7 +28,7 @@ def renderTile(letter2play, square, BOARD, blankTileFlag):
 	if(blankTileFlag is True):
 		BOARD.blit(FONTSMALL2.render(str(0), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
 	else:
-		BOARD.blit(FONTSMALL2.render(str(Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
+		BOARD.blit(FONTSMALL2.render(str(tile.Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
 
 def renderRackTile(letter, score, square, SECONDHALF):
 	FONTSMALL = pygame.font.SysFont('Andale Mono', 27)
@@ -104,9 +103,9 @@ def generateWordList():
 	#------------------------------------------
 	#Build Trie
 
-	wordListTrie = Trie()
+	wordListTrie = trie.Trie()
 
-	inputFile = open('Lexicon.txt','r')
+	inputFile = open('wordLists/Lexicon.txt','r')
 
 	for word in inputFile:
 
@@ -117,7 +116,7 @@ def generateWordList():
 		for item in word.strip():
 			if(ord(item) > 123 or ord(item) < 97):
 				dontAdd = True
-		#If everything is okay		
+		#If everything is okay
 		if not dontAdd:
 			wordListTrie.addWord(word.strip())
 	return wordListTrie
@@ -209,13 +208,12 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 		return False		
 
 def removeTiles(playerRack, letters):
-	#print letters
+
 	for x in letters:
 		tiles = [t.letter for t in playerRack.rack]
 		for idx, elem in enumerate(tiles):
 			if(tiles[idx] == x):
-				#print "Found "+x+" and deleting it"
 				playerRack.removeTile(idx)
 				break
-	#playerRack.showRack()
 	return playerRack
+

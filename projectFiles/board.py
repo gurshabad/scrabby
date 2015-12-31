@@ -59,17 +59,3 @@ class TheBoard:
 			print "\n"
 			c += 1
 		print ""
-
-
-def main():
-	ourBoard = TheBoard()
-	# pprint(ourBoard.board)
-	ourBoard.board[7][7].setTile(Tile('I'))
-	ourBoard.board[7][6].setTile(Tile('D'))
-	ourBoard.board[7][8].setTile(Tile('C'))
-	ourBoard.board[7][9].setTile(Tile('K'))
-	ourBoard.printBoard()
-
-
-if __name__ == '__main__':
-	main()

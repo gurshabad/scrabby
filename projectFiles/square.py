@@ -1,4 +1,4 @@
-from tile import *
+import tile
 
 class Square:
 
@@ -25,7 +25,7 @@ class Square:
 		self.acrossCrossCheck.append(False) #To avoid playing the special trie EOW character '{' 
 
 		self.special = 0
-		self.tile = Tile()
+		self.tile = tile.Tile()
 
 	def changeSpeciality(self,val): # Change the type of the square
 		self.special = val
@@ -39,11 +39,3 @@ class Square:
 
 	def getChar(self):
 		return self.tile.letter
-
-
-
-def main():
-	pass
-
-if __name__ == '__main__':
-	main()

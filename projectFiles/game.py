@@ -5,10 +5,10 @@
 
 #List ends
 
-from gen_board import *
-from tile import *
-from rack import *
-from trie import *
+import trie
+import board
+import tile
+import rack
 from helpers import *
 import random
 import numpy as np
@@ -65,7 +65,7 @@ def computeLeaves(word, pos, isAcross, rack, board):
 	return score
 
 
-def getBestWord(ourBoard, legalWords, computerRack, bag):
+def getBestWord(ourBoard, legalWords, computerRack, bag, wordListTrie):
 
 
 	print "Lookahead phase begins"
@@ -95,7 +95,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 
 			simRack = Rack()
 			copy_bag = simRack.replenish(copy_bag)
-			rack = [tile.letter for tile in simRack.rack]
+			rackLetters = [tile.letter for tile in simRack.rack]
 
 			ply1Copy_ourBoard = deepcopy(ply0Copy_ourBoard)
 
@@ -115,7 +115,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						leftPart(ply0Copy_ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
+						leftPart(ply0Copy_ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
 
 			#Generate all down moves
 			for colIdx in xrange(len(ply0Copy_ourBoard.board)):
@@ -129,7 +129,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
-						upperPart(ply0Copy_ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
+						upperPart(ply0Copy_ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
 
 			if(len(genWords)):
 
@@ -173,7 +173,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						leftPart(ply1Copy_ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
+						leftPart(ply1Copy_ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
 
 			#Generate all down moves
 			for colIdx in xrange(len(ply1Copy_ourBoard.board)):
@@ -187,7 +187,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag):
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
-						upperPart(ply1Copy_ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, genWords)
+						upperPart(ply1Copy_ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, genWords)
 
 			if(len(genWords)):
 
@@ -436,7 +436,7 @@ def undoPlayerMove(board, changedPositions):
 		r = pos[1]
 		c = pos[0]
 
-		board.board[r][c].tile = Tile()
+		board.board[r][c].tile = tile.Tile()
 		board.board[r][c].occupied = False
 
 	recomputeAnchorSquares(board)
@@ -521,7 +521,7 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]][pos[0]+loc].isAnchor = False
 
-			board.board[pos[1]][pos[0]+loc].setTile(Tile(letter))
+			board.board[pos[1]][pos[0]+loc].setTile(tile.Tile(letter))
 
 			#print board.board[pos[1]][pos[0]+loc].getChar(), pos[1], pos[0]+loc, board.board[pos[1]][pos[0]+loc].isAnchor
 
@@ -545,7 +545,7 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]+loc][pos[0]].isAnchor = False
 
-			board.board[pos[1]+loc][pos[0]].setTile(Tile(letter))
+			board.board[pos[1]+loc][pos[0]].setTile(tile.Tile(letter))
 			#print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
 
 	#print changed
@@ -566,7 +566,7 @@ def scoreThisMove(board, word, pos, isAcross):
 
 	for i in range(len(word)):
 		if current[i].getChar() == '_':
-			current[i].setTileVal(Tile(word[i]))
+			current[i].setTileVal(tile.Tile(word[i]))
 
 	""" Tile special codes for reference
 	0 - Nothing Special
@@ -580,8 +580,8 @@ def scoreThisMove(board, word, pos, isAcross):
 	if(isAcross):
 		#check for bingo
 		tileCount = 0
-		for tile in current:
-			if not tile.occupied:
+		for t in current:
+			if not t.occupied:
 				tileCount += 1
 		if tileCount == 7:
 			finalScore += 50
@@ -631,8 +631,8 @@ def scoreThisMove(board, word, pos, isAcross):
 	else:
 		#check for bingo
 		tileCount = 0
-		for tile in current:
-			if not tile.occupied:
+		for t in current:
+			if not t.occupied:
 				tileCount += 1
 		if tileCount == 7:
 			finalScore += 50
@@ -680,40 +680,13 @@ def scoreThisMove(board, word, pos, isAcross):
 
 	for i in range(len(word)):
 		if not current[i].occupied:
-			current[i].tile = Tile()
+			current[i].tile = tile.Tile()
 
 	return finalScore
 
 
 import string, random
 import datetime
-
-#Backbone DAWG move generator for Scrabby
-#Trie construction of the word list begins
-
-trieStart = datetime.datetime.now()
-
-wordListTrie = Trie()
-
-inputFile = open('Lexicon.txt','r')
-
-for word in inputFile:
-
-	dontAdd = False
-
-	#Check if input is sanitized
-	#Don't allow anything other than lowercase English letters and EOW({)
-	for item in word.strip():
-		if(ord(item) > 123 or ord(item) < 97):
-			dontAdd = True
-	#If everything is okay		
-	if not dontAdd:
-		wordListTrie.addWord(word.strip())
-
-trieEnd = datetime.datetime.now()
-
-#Trie construction time
-#print (trieEnd - trieStart).microseconds
 
 #Trie construction done
 
@@ -1009,44 +982,21 @@ def extendDownBeta(board, colIdx, rack, partialWord, currentNode, square, legalW
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
 testLetters = "eeeaaiiooonnnrrttllssuuddgbcmpfhvwykjxqz******"
 
-
-occupiedMatrix = [[0] * 15] * 15
-
-def getClashes(r, c, word, occupiedMatrix):
-    for i in range(len(word)):
-        up = r
-        down = r
-        if ((r - 1 < 15) and (r - 1 >= 0) and (c+i < 15) and (c+i >=0)):
-            if occupiedMatrix[r-1][c+i] == 1:
-                up = r - 1
-                while up > 0:
-                    if occupiedMatrix[up][c+i] == 1:
-                        up = up - 1
-
-        if ((r + 1 < 15) and (r + 1 >= 0) and (c+i < 15) and (c+i >= 0)):
-            if occupiedMatrix[r+1][c+i] == 1:
-                down = r + 1
-                while down < 15:
-                    if occupiedMatrix[down][c+i] == 1:
-                        down = down - 1
-
-        #form word, wordListTrie.query(word)
-
-
 #Below is a honorable sandbox to play with extendLeft and extendRightBeta
 
 def main():
 
-	ourBoard = TheBoard()
+	ourBoard = board.TheBoard()
 	ourBoard.printBoard()
 
-	playerRack = Rack()
-	computerRack = Rack()
+	playerRack = rack.Rack()
+	computerRack = rack.Rack()
 
 	bag = [ letter for letter in testLetters ]
 
 	bag = playerRack.replenish(bag);
 	bag = computerRack.replenish(bag);
+	wordListTrie = generateWordList()
 
 	playerTurn = True
 	print "You get to move first! Here is your rack"
@@ -1107,7 +1057,7 @@ def main():
 
 			computerRack.showRack()
 
-			rack = [ i.letter for i in computerRack.rack]
+			rackLetters = [ i.letter for i in computerRack.rack]
 
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
@@ -1123,7 +1073,7 @@ def main():
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
 			#Generate all down moves
 			for colIdx in xrange(len(ourBoard.board)):
@@ -1137,7 +1087,7 @@ def main():
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
-						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
 	
 
 			random.shuffle(legalWords)

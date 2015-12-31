@@ -1,9 +1,8 @@
 import sys, pygame, time, datetime
 import numpy as np
-from gen_board import *
-from tile import *
-from rack import *
-from trie import *
+import board
+import tile
+import rack
 from inputbox import *
 from helpers import *
 from game import *
@@ -24,13 +23,13 @@ def run_game():
 	#------------------------------------------
 	#Init Board
 	
-	ourBoard = TheBoard()
+	ourBoard = board.TheBoard()
 
 	scorePlayer = 0
 	scoreComputer = 0
 
-	playerRack = Rack()
-	computerRack = Rack()
+	playerRack = rack.Rack()
+	computerRack = rack.Rack()
 
 	bag = [ letter for letter in testLetters ]
 
@@ -247,7 +246,7 @@ def run_game():
 
 			genStart = datetime.datetime.now()
 
-			rack = [tile.letter for tile in computerRack.rack]
+			rackLetters = [tile.letter for tile in computerRack.rack]
 
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
@@ -263,7 +262,7 @@ def run_game():
 						anchorSquare = idx
 						prevAnchor = anchorSquare
 
-						leftPart(ourBoard.board, rowIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						leftPart(ourBoard.board, rowIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
 			#Generate all down moves
 			for colIdx in xrange(len(ourBoard.board)):
@@ -277,7 +276,7 @@ def run_game():
 						anchorSquare = rowIdx
 						prevAnchor = anchorSquare
 
-						upperPart(ourBoard.board, colIdx, rack, '', wordListTrie.root, anchorSquare, limit, legalWords)
+						upperPart(ourBoard.board, colIdx, rackLetters, '', wordListTrie.root, anchorSquare, limit, legalWords)
 
 			genEnd = datetime.datetime.now()
 
@@ -322,7 +321,7 @@ def run_game():
 
 					simStart = datetime.datetime.now()
 
-					AIWord = getBestWord(ourBoard, legalWords[:5], computerRack, bag)
+					AIWord = getBestWord(ourBoard, legalWords[:5], computerRack, bag, wordListTrie)
 
 					simEnd = datetime.datetime.now()
 					simTimes.append((simEnd-simStart).microseconds)
