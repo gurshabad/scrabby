@@ -94,16 +94,16 @@ def run_game():
 			myRect = boardRectangles[idx][idy]
 			if y.occupied == True: pass #print boardRectangles[idx][idy]
 			else:
-				if y.special == 4: specialColor = (255, 0, 0) #TW
-				elif y.special == 3: specialColor = (255, 153, 255) #DW
-				elif y.special == 2: specialColor = (0, 102, 255) #TL
-				elif y.special == 1: specialColor = (102, 204, 255) #DL
+				if y.wordMultiplier == 3: specialColor = (255, 0, 0) #TW
+				elif y.wordMultiplier == 2: specialColor = (255, 153, 255) #DW
+				elif y.letterMultiplier == 3: specialColor = (0, 102, 255) #TL
+				elif y.letterMultiplier == 2: specialColor = (102, 204, 255) #DL
 				else: specialColor = (84, 130, 53)
 				myRect = pygame.draw.rect(BOARD, specialColor, (myRect.topleft[0],myRect.topleft[1], myRect.width, myRect.height))
-				if y.special == 4: BOARD.blit(FONTSMALL2.render("TW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
-				elif y.special == 3: BOARD.blit(FONTSMALL2.render("DW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
-				elif y.special == 2: BOARD.blit(FONTSMALL2.render("TL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
-				elif y.special == 1: BOARD.blit(FONTSMALL2.render("DL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				if y.wordMultiplier == 3: BOARD.blit(FONTSMALL2.render("TW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				elif y.wordMultiplier == 2: BOARD.blit(FONTSMALL2.render("DW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				elif y.letterMultiplier == 3: BOARD.blit(FONTSMALL2.render("TL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				elif y.letterMultiplier == 2: BOARD.blit(FONTSMALL2.render("DL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
 
 	#########################################
 	#Row-Column Markers are rendered next
@@ -200,25 +200,26 @@ def run_game():
 					continue
 
 				else:
-					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard, current[1])
+
+					print "Before player move:"
+					human.rack.showRack()
+
+					#need to call scoreThisMove before playerMove function is called because the latter sets tile to occupied
+					human.score += scoreThisMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3], human.rack) #calculate score of the move
+					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3], human.rack) #Play the move on offline board
+					
+					playerTurn = False #Change turn to Computer
+					human.rack = removeTiles(human.rack, current[0])					
+					bag = human.rack.replenish(bag) #Replenish Player's Rack after legit move
+
+					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
 					print "Move Success!\n\n"
 					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
-					time.sleep(2)
-					#current = motion[1]
+					time.sleep(2)					
 
-					print "Before player move:"
-					human.rack.showRack()
-					human.rack = removeTiles(human.rack, current[0])
-
-					#need to call scoreThisMove before playerMove function is called because the latter sets tile to occupied
-					human.score += scoreThisMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #calculate score of the move
-					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3]) #Play the move on offline board
-					
-					playerTurn = False #Change turn to Computer
-					bag = human.rack.replenish(bag) #Replenish Player's Rack after legit move
 					displayScores(human.score, computer.score, len(bag), SECONDHALF, SCREEN, playerTurn) #Display Scores
 					displayRack(human.rack, SECONDHALF, SCREEN) #Display Player's New Rack
 					print "After player move:"
@@ -264,7 +265,7 @@ def run_game():
 				scoringStart = datetime.datetime.now()
 
 				for i in xrange(len(legalWords)):
-					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
+					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2], computer.rack)
 					wordsWithScores[legalWords[i]] = (currentScore, currentScore + computeLeaves(legalWords[i][0], legalWords[i][1], legalWords[i][2], computer.rack, ourBoard))
 
 				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1][1], reverse = True)) #sorted dictionary
@@ -307,29 +308,27 @@ def run_game():
 					continue
 				else:
 
-					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard, current[1])
-					FIRSTHALF.blit(BOARD, (19,19))
-					SCREEN.blit(FIRSTHALF,(0,0))
-					pygame.display.flip()
-					print "Move Success!\n\n"
-					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
-					time.sleep(1)
-
 					print "Before Computer Move:"
 					computer.rack.showRack()
-
-					computer.rack = removeTiles(computer.rack, current[0])
 
 					print "\nAI played:", AIWord[:3]
 					print "Score of move:", wordsWithScores[AIWord][0]
 					print
 
 					computer.score += wordsWithScores[AIWord][0]
-					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
+					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2], computer.rack)
 
 					playerTurn = True
-					#if(len(bag) == 0): playerTurn = True
+					computer.rack = removeTiles(computer.rack, current[0])
 					bag = computer.rack.replenish(bag);
+
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
+					FIRSTHALF.blit(BOARD, (19,19))
+					SCREEN.blit(FIRSTHALF,(0,0))
+					pygame.display.flip()
+					print "Move Success!\n\n"
+					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
+					time.sleep(1)
 
 					displayScores(human.score, computer.score, len(bag), SECONDHALF, SCREEN, playerTurn)
 					print "After Computer Move:"

@@ -4,6 +4,7 @@ import numpy as np
 import board
 import rack
 import inputbox
+import player
 
 from helpers import *
 from game import *
@@ -11,7 +12,7 @@ from copy import deepcopy
 from collections import OrderedDict
 
 allLetters = "eeeeeeeeeeeeaaaaaaaaaiiiiiiiiioooooooonnnnnnrrrrrrttttttllllssssuuuuddddgggbbccmmppffhhvvwwyykjxqz**"
-testLetters = "aaeessllnn****"
+tLetters = "aaeessddbiioollnn***"
 
 choice1 = 0
 choice2 = 0
@@ -24,16 +25,13 @@ def run_game():
 	
 	ourBoard = board.TheBoard()
 
-	scorePlayer = 0
-	scoreComputer = 0
-
-	playerRack = rack.Rack()
-	computerRack = rack.Rack()
+	player1 = player.Player()
+	player2 = player.Player()
 
 	bag = [ letter for letter in allLetters ]
 
-	bag = playerRack.replenish(bag)
-	bag = computerRack.replenish(bag)
+	bag = player1.rack.replenish(bag)
+	bag = player2.rack.replenish(bag)
 
 	playerTurn = True
 	#playerTurn = False
@@ -104,16 +102,16 @@ def run_game():
 			myRect = boardRectangles[idx][idy]
 			if y.occupied == True: pass #print boardRectangles[idx][idy]
 			else:
-				if y.special == 4: specialColor = (255, 0, 0) #TW
-				elif y.special == 3: specialColor = (255, 153, 255) #DW
-				elif y.special == 2: specialColor = (0, 102, 255) #TL
-				elif y.special == 1: specialColor = (102, 204, 255) #DL
+				if y.wordMultiplier == 3: specialColor = (255, 0, 0) #TW
+				elif y.wordMultiplier == 2: specialColor = (255, 153, 255) #DW
+				elif y.letterMultiplier == 3: specialColor = (0, 102, 255) #TL
+				elif y.letterMultiplier == 2: specialColor = (102, 204, 255) #DL
 				else: specialColor = (84, 130, 53)
 				myRect = pygame.draw.rect(BOARD, specialColor, (myRect.topleft[0],myRect.topleft[1], myRect.width, myRect.height))
-				if y.special == 4: BOARD.blit(FONTSMALL2.render("TW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
-				elif y.special == 3: BOARD.blit(FONTSMALL2.render("DW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
-				elif y.special == 2: BOARD.blit(FONTSMALL2.render("TL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
-				elif y.special == 1: BOARD.blit(FONTSMALL2.render("DL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				if y.wordMultiplier == 3: BOARD.blit(FONTSMALL2.render("TW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				elif y.wordMultiplier == 2: BOARD.blit(FONTSMALL2.render("DW", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				elif y.letterMultiplier == 3: BOARD.blit(FONTSMALL2.render("TL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
+				elif y.letterMultiplier == 2: BOARD.blit(FONTSMALL2.render("DL", 1, (50,50,50)),(myRect.topleft[0]+5, myRect.topleft[1]+5))
 
 	#########################################
 	#Row-Column Markers are rendered next
@@ -141,8 +139,8 @@ def run_game():
 	FIRSTHALF.blit(BOARD, (19,19))
 	SCREEN.blit(FIRSTHALF,(0,0))
 	SCREEN.blit(SECONDHALF,(500,0))
-	displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
-	displayRack(playerRack, SECONDHALF, SCREEN)
+	displayScores(player1.score, player2.score, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
+	displayRack(player1.rack, SECONDHALF, SCREEN)
 	pygame.display.flip()
 
 
@@ -161,7 +159,7 @@ def run_game():
 	moveTimes = []
 	justStartAlready = True
 
-	while True and not (playerRack.isEmpty() or computerRack.isEmpty()):
+	while True and not (player1.rack.isEmpty() or player2.rack.isEmpty()):
 
 		
 		#------------------------------------
@@ -180,8 +178,8 @@ def run_game():
 			inputbox.display_box(SCREEN, SECONDHALF, P1.upper()+"'S TURN!", (160,36,34))
 			#time.sleep(2)
 
-			rackLetters = [tile.letter for tile in playerRack.rack]
-			playerRack.showRack()
+			rackLetters = [tile.letter for tile in player1.rack.rack]
+			player1.rack.showRack()
 
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
@@ -195,8 +193,8 @@ def run_game():
 				scoringStart = datetime.datetime.now()
 
 				for i in xrange(len(legalWords)):
-					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
-					wordsWithScores[legalWords[i]] = (currentScore, currentScore + computeLeaves(legalWords[i][0], legalWords[i][1], legalWords[i][2], computerRack, ourBoard))
+					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2], player1.rack )
+					wordsWithScores[legalWords[i]] = (currentScore, currentScore + computeLeaves(legalWords[i][0], legalWords[i][1], legalWords[i][2], player2.rack, ourBoard))
 
 				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1][1], reverse = True)) #sorted dictionary
 
@@ -216,19 +214,34 @@ def run_game():
 					print "Top Five: "+str(legalWords[:5])
 					print "Top Five: "+str([wordsWithScores[x] for x in legalWords[:5]])
 
-					AIWord = getBestWord(ourBoard, legalWords[:5], playerRack, bag, wordListTrie)
+					AIWord = getBestWord(ourBoard, legalWords[:5], player1.rack, bag, wordListTrie)
 
 				# print legalWords[0][0], wordsWithScores[legalWords[0]]
 				# print legalWords[0][3], legalWords[0][4]
 
-				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], playerRack)
+				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], player1.rack)
 
 				if not current[0]:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard, current[1])
+					print "Before "+P1+" Move:"
+					player1.rack.showRack()
+
+
+					print "\n"+P1+" played:", AIWord[:3]
+					print "Score of move:", wordsWithScores[AIWord][0]
+					print
+
+					player1.score += wordsWithScores[AIWord][0]
+					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2], player1.rack)
+
+					playerTurn = False
+					player1.rack = removeTiles(player1.rack, current[0])					
+					bag = player1.rack.replenish(bag);
+
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -236,27 +249,10 @@ def run_game():
 					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
-					print "Before "+P1+" Move:"
-					playerRack.showRack()
-
-					playerRack = removeTiles(playerRack, current[0])
-
-					print "\n"+P1+" played:", AIWord[:3]
-					print "Score of move:", wordsWithScores[AIWord][0]
-					print
-
-
-					scorePlayer += wordsWithScores[AIWord][0]
-					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
-
-					playerTurn = False
-					#if(len(bag) == 0): playerTurn = True
-					bag = playerRack.replenish(bag);
-
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
-					displayRack(playerRack, SECONDHALF, SCREEN) #Display Player's New Rack
+					displayScores(player1.score, player2.score, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
+					displayRack(player1.rack, SECONDHALF, SCREEN) #Display Player's New Rack
 					print "After"+P1+" Move:"
-					playerRack.showRack()
+					player1.rack.showRack()
 
 					ourBoard.printBoard()
 
@@ -275,18 +271,18 @@ def run_game():
 						continue
 				else:
 					print "No Move Possible! Had to shuffle!"
-					toRemove = ''.join([x.letter for x in playerRack.rack])
+					toRemove = ''.join([x.letter for x in player1.rack.rack])
 					if(len(bag) < 7): toRemove = toRemove[:len(bag)]
-					playerRack = removeTiles(playerRack,toRemove)
+					player1.rack = removeTiles(player1.rack,toRemove)
 					print "Shuffle Success!\n\n"
-					bag = playerRack.replenish(bag) #Replenish Player's Rack after shuffle
+					bag = player1.rack.replenish(bag) #Replenish Player's Rack after shuffle
 					bag += [x for x in toRemove]
 
 					playerTurn = False
 
 					inputbox.display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
+					displayScores(player1.score, player2.score, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
 
 				continue
 
@@ -309,7 +305,7 @@ def run_game():
 
 			genStart = datetime.datetime.now()
 
-			rackLetters = [tile.letter for tile in computerRack.rack]
+			rackLetters = [tile.letter for tile in player2.rack.rack]
 
 			#List of 4-tuples: (word, pos, isAcross, anchorPos)			
 			legalWords = []
@@ -328,8 +324,8 @@ def run_game():
 				scoringStart = datetime.datetime.now()
 
 				for i in xrange(len(legalWords)):
-					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2] )
-					wordsWithScores[legalWords[i]] = (currentScore, currentScore + computeLeaves(legalWords[i][0], legalWords[i][1], legalWords[i][2], computerRack, ourBoard))
+					currentScore = scoreThisMove(ourBoard, legalWords[i][0], legalWords[i][1], legalWords[i][2], player2.rack )
+					wordsWithScores[legalWords[i]] = (currentScore, currentScore + computeLeaves(legalWords[i][0], legalWords[i][1], legalWords[i][2], player2.rack, ourBoard))
 
 				wordsWithScores = OrderedDict(sorted(wordsWithScores.items(), key=lambda t: t[1][1], reverse = True)) #sorted dictionary
 
@@ -356,16 +352,31 @@ def run_game():
 					print "Top Five: "+str(legalWords[:5])
 					print "Top Five: "+str([wordsWithScores[x] for x in legalWords[:5]])
 
-					AIWord = getBestWord(ourBoard, legalWords[:5], computerRack, bag, wordListTrie)
+					AIWord = getBestWord(ourBoard, legalWords[:5], player2.rack, bag, wordListTrie)
 
-				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computerRack)
+				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], player2.rack)
 
 				if not current[0]:
 					print "Try again."
 					continue
 				else:
 
-					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard, current[1])
+					print "Before "+P2+" Move:"
+					player2.rack.showRack()
+
+
+					print "\n"+P2+" played:", AIWord[:3]
+					print "Score of move:", wordsWithScores[AIWord][0]
+					print
+
+					player2.score += wordsWithScores[AIWord][0]
+					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2], player2.rack)
+
+					playerTurn = True
+					player2.rack = removeTiles(player2.rack, current[0])					
+					bag = player2.rack.replenish(bag);
+
+					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
 					FIRSTHALF.blit(BOARD, (19,19))
 					SCREEN.blit(FIRSTHALF,(0,0))
 					pygame.display.flip()
@@ -373,26 +384,9 @@ def run_game():
 					inputbox.display_box(SCREEN, SECONDHALF, "MOVE SUCCESS!", (107,142,35))
 					time.sleep(1)
 
-					print "Before "+P2+" Move:"
-					computerRack.showRack()
-
-					computerRack = removeTiles(computerRack, current[0])
-
-					print "\n"+P2+" played:", AIWord[:3]
-					print "Score of move:", wordsWithScores[AIWord][0]
-					print
-
-
-					scoreComputer += wordsWithScores[AIWord][0]
-					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2])
-
-					playerTurn = True
-					#if(len(bag) == 0): playerTurn = True
-					bag = computerRack.replenish(bag);
-
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
+					displayScores(player1.score, player2.score, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2)
 					print "After "+P2+" Move:"
-					computerRack.showRack()
+					player2.rack.showRack()
 
 					ourBoard.printBoard()
 
@@ -411,18 +405,18 @@ def run_game():
 						continue
 				else:
 					print "No Move Possible! Had to shuffle!"
-					toRemove = ''.join([x.letter for x in computerRack.rack])
+					toRemove = ''.join([x.letter for x in player2.rack.rack])
 					if(len(bag) < 7): toRemove = toRemove[:len(bag)]
-					computerRack = removeTiles(computerRack,toRemove)
+					player2.rack = removeTiles(player2.rack,toRemove)
 					print "Shuffle Success!\n\n"
-					bag = computerRack.replenish(bag) #Replenish Player's Rack after shuffle
+					bag = player2.rack.replenish(bag) #Replenish Player's Rack after shuffle
 					bag += [x for x in toRemove]
 
 					playerTurn = True
 
 					inputbox.display_box(SCREEN, SECONDHALF, "SHUFFLE SUCCESS!", (107,142,35))
 					time.sleep(2)
-					displayScores(scorePlayer, scoreComputer, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
+					displayScores(player1.score, player2.score, len(bag), SECONDHALF, SCREEN, playerTurn, P1, P2) #Display Scores
 
 				continue
 
@@ -442,9 +436,9 @@ def run_game():
 		print "Average move time:", sum(moveTimes)/float(len(moveTimes))
 		print "Std deviation:", np.std(moveTimes)
 
-	if scoreComputer > scorePlayer:
+	if player2.score > player1.score:
 		inputbox.display_box(SCREEN, SECONDHALF, P2.upper()+" WON!", (0, 102, 255))
-	elif scorePlayer > scoreComputer:
+	elif player1.score > player2.score:
 		inputbox.display_box(SCREEN, SECONDHALF, P1.upper()+" WON!", (0, 102, 255))
 	else:
 		inputbox.display_box(SCREEN, SECONDHALF, "TIE!", (0, 102, 255))

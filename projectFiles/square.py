@@ -6,8 +6,9 @@ class Square:
 	#occupied = False # Whether the square is occupied or not
 	#isAnchor = False # Whether the square is an anchor square or not
 	#crossCheck = [] # Something that Anmol needed
-	""" 0 - Nothing Special, 1 - Double Letter(DL), 2 - Triple Letter(TL), 3 - Double Word(DW), 4 - Triple Word(TW) """
-	#special = 0 # The type of square it is
+	""" 1 - Nothing Special, 2 - Double Letter(DL), 3 - Triple Letter(TL), 4 - Double Word(DW), 5 - Triple Word(TW) """
+	#letterMultiplier = 1 # Double Letter, Triple Letter
+	#wordMultiplier = 1 # Double Word, Triple Word
 
 	def __init__(self):
 		self.occupied = False
@@ -24,11 +25,15 @@ class Square:
 			self.acrossCrossCheck.append(True) #If true for a letter, then it is safe to play that letter on this square in an across move.
 		self.acrossCrossCheck.append(False) #To avoid playing the special trie EOW character '{' 
 
-		self.special = 0
+		self.letterMultiplier = 1
+		self.wordMultiplier = 1
 		self.tile = tile.Tile()
 
-	def changeSpeciality(self,val): # Change the type of the square
-		self.special = val
+	def changeLSpeciality(self,val): # Change the letter multiplier type of the square
+		self.letterMultiplier = val
+
+	def changeWSpeciality(self,val): # Change the word multiplier type of the square
+		self.wordMultiplier = val
 
 	def setTile(self,val): # Place a tile on the square
 		self.tile = val

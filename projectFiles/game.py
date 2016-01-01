@@ -5,7 +5,7 @@
 
 #List ends
 
-import string, random, datetime
+import string, random, datetime,sys
 import numpy as np
 from copy import deepcopy
 from collections import OrderedDict
@@ -328,10 +328,9 @@ def setCrossCheckBits(board, wordList):
 
 def validityCheck(isAcross, board, pos, word, playerRack):
 
-	#print word, pos, isAcross
-
 	r = pos[1]
 	c = pos[0]
+	blankTileIndexList = []	
 
 	#Check 1: Check if word stays within bounds of the board
 
@@ -345,9 +344,6 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 			print "Uh oh #1 Invalid move."
 			return (False, blankTileIndexList)
 
-	#word = word.lower()
-	#print word
-
 	#Get a snapshot of the board at the desired positions
 
 	if(isAcross):
@@ -355,13 +351,10 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 	else:
 		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
 
-	#print [ c.getChar() for c in current ]
-
 	rackCopy = [ t.letter for t in playerRack.rack ]
 	deleteThis = []
 
 	anchorFlag = False
-	blankTileIndexList = []
 
 	#Check 2: Check if we even have the letters not on the board on our rack.
 	#Check 3: Check if letters on the board line up with letters in the word.
@@ -421,7 +414,6 @@ def undoPlayerMove(board, changedPositions):
 
 	recomputeAnchorSquares(board)
 
-
 def recomputeAnchorSquares(board):
 
 
@@ -463,24 +455,13 @@ def recomputeAnchorSquares(board):
 
 
 #The following function just sets the tiles in the backend board and sets adjacent squares to Anchor 
-def playerMove(board, word, pos, isAcross):
+def playerMove(board, word, pos, isAcross, playerRack):
 
 	r = pos[1]
 	c = pos[0]
 	changed = []
 
-	#word = word.lower()
-	if(isAcross):
-		current = []
-		for elem in range(len(word)):
-			current.append(board.board[r][c+elem])
-			if board.board[r][c+elem].getChar() == '_': changed.append((c+elem,r))
-
-	else:
-		current = []
-		for elem in range(len(word)):
-			current.append(board.board[r+elem][c])
-			if board.board[r+elem][c].getChar() == '_': changed.append((c, r+elem))
+	rackCopy = [ t.letter for t in playerRack.rack ]
 
 	if(isAcross):
 
@@ -501,10 +482,19 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]][pos[0]+loc].isAnchor = False
 
-			board.board[pos[1]][pos[0]+loc].setTile(tile.Tile(letter))
+			if not board.board[pos[1]][pos[0]+loc].occupied:
 
-			#print board.board[pos[1]][pos[0]+loc].getChar(), pos[1], pos[0]+loc, board.board[pos[1]][pos[0]+loc].isAnchor
-
+				changed.append((pos[0]+loc,pos[1]))
+				board.board[pos[1]][pos[0]+loc].setTile(tile.Tile(letter))
+				if letter not in rackCopy:
+					if "*" in rackCopy:
+						rackCopy.remove("*")
+						board.board[pos[1]][pos[0]+loc].tile.setBlank()
+					else:
+						print "Fatal error, invalid word got through."
+						sys.exit(1)
+				else:
+					rackCopy.remove(letter)
 
 	else:
 
@@ -525,147 +515,88 @@ def playerMove(board, word, pos, isAcross):
 
 			board.board[pos[1]+loc][pos[0]].isAnchor = False
 
-			board.board[pos[1]+loc][pos[0]].setTile(tile.Tile(letter))
-			#print board.board[pos[1]+loc][pos[0]].getChar(), pos[1]+loc, pos[0], board.board[pos[1]+loc][pos[0]].isAnchor
+			if not board.board[pos[1]+loc][pos[0]].occupied:
 
-	#print changed
+				changed.append((pos[0], pos[1]+loc))
+				board.board[pos[1]+loc][pos[0]].setTile(tile.Tile(letter))
+				if letter not in rackCopy:
+					if "*" in rackCopy:
+						rackCopy.remove("*")
+						board.board[pos[1]+loc][pos[0]].tile.setBlank()
+					else:
+						print "Fatal error, invalid word got through."
+						sys.exit(1)
+				else:
+					rackCopy.remove(letter)
+
 	return changed
 
-
 #This function calculates the score of a move after it has been played
-def scoreThisMove(board, word, pos, isAcross):
+def scoreThisMove(board, word, pos, isAcross, playerRack):
 	r = pos[1]
 	c = pos[0]
 	#Get relevant space
 
 	if(isAcross):
 		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
+		crossSum = [ board.board[r][c+elem].downSum for elem in range(len(word)) ]
 
 	else:
 		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
+		crossSum = [ board.board[r+elem][c].acrossSum for elem in range(len(word)) ]
 
-	print current
+	rackCopy = [ t.letter for t in playerRack.rack ]
+
+	#print current
 	for i in range(len(word)):
 		if current[i].getChar() == '_':
-			current[i].setTileVal(tile.Tile(word[i]))
+			if(word[i] not in rackCopy):
+				if("*" in rackCopy):
+					rackCopy.remove("*")
+					current[i].setTileVal(tile.Tile(word[i]))
+					current[i].tile.setBlank()
+				else:
+					print "Fatal error, invalid word got through."
+					sys.exit(1)
+			else:
+				rackCopy.remove(word[i])
+				current[i].setTileVal(tile.Tile(word[i]))
 
-	""" Tile special codes for reference
-	0 - Nothing Special
-	1 - Double Letter(DL)
-	2 - Triple Letter(TL)
-	3 - Double Word(DW)
-	4 - Triple Word(TW)
-	"""
 	finalScore = 0
 
-	if(isAcross):
-		#check for bingo
-		tileCount = 0
-		for t in current:
-			if not t.occupied:
-				tileCount += 1
-		if tileCount == 7:
-			finalScore += 50
+	#check for bingo
+	tileCount = 0
+	for t in current:
+		if not t.occupied:
+			tileCount += 1
+	if tileCount == 7:
+		finalScore += 50
 
-		#calculate score for the main word formed
-		mainWordScore = 0
-		sideWordScores = 0
-		numDW = 0 #number of double word premium tiles
-		numTW = 0 #number of triple word premium tiles
-		for t in current:
+	#calculate score for the main word formed
+	mainWordScore = 0
+	sideWordScores = 0
 
-			if t.occupied:
-				mainWordScore += t.tile.getVal()
-			else:
+	totalWM = 1
 
+	for idx, t in enumerate(current):
 
-				if t.special == 0:
-					mainWordScore += t.tile.getVal()
-					if(t.downSum > 0):
-						sideWordScores += t.downSum + t.tile.getVal()
-				elif t.special == 1:
-					mainWordScore += 2 * t.tile.getVal()
-					if(t.downSum > 0):
-						sideWordScores += t.downSum + 2*t.tile.getVal()
-				elif t.special == 2:
-					mainWordScore += 3 * t.tile.getVal()
-					if(t.downSum > 0):
-						sideWordScores += t.downSum + 3*t.tile.getVal()
-				elif t.special == 3:
-					mainWordScore += t.tile.getVal()
-					if(t.downSum > 0):
-						sideWordScores += 2*(t.downSum + t.tile.getVal())
-					numDW += 1
-				elif t.special == 4:
-					mainWordScore += t.tile.getVal()
-					if(t.downSum > 0):
-						sideWordScores += 3*(t.downSum + t.tile.getVal())
-					numTW += 1
+		if t.occupied:
+			mainWordScore += t.tile.getVal()
+		else:
+			mainWordScore += t.tile.getVal()*t.letterMultiplier
+			if(crossSum[idx] > 0):
+				sideWordScores += t.wordMultiplier*(t.downSum + t.tile.getVal()*t.letterMultiplier)
+			totalWM *= t.wordMultiplier
 
-		if numDW > 0:
-			mainWordScore *= numDW * 2
-		if numTW > 0:
-			mainWordScore *= numTW * 3
-
-		finalScore += mainWordScore
-		finalScore += sideWordScores
-	else:
-		#check for bingo
-		tileCount = 0
-		for t in current:
-			if not t.occupied:
-				tileCount += 1
-		if tileCount == 7:
-			finalScore += 50
-
-		#calculate score for the main word formed
-		mainWordScore = 0
-		sideWordScores = 0
-
-		numDW = 0 #number of double word premium tiles
-		numTW = 0 #number of triple word premium tiles
-		for t in current:
-			if t.occupied:
-				mainWordScore += t.tile.getVal()
-			else:
-				if t.special == 0:
-					mainWordScore += t.tile.getVal()
-					if(t.acrossSum > 0):
-						sideWordScores += t.acrossSum + t.tile.getVal()
-				elif t.special == 1:
-					mainWordScore += 2 * t.tile.getVal()
-					if(t.acrossSum > 0):
-						sideWordScores += t.acrossSum + 2*t.tile.getVal()
-				elif t.special == 2:
-					mainWordScore += 3 * t.tile.getVal()
-					if(t.acrossSum > 0):
-						sideWordScores += t.acrossSum + 3*t.tile.getVal()
-				elif t.special == 3:
-					mainWordScore += t.tile.getVal()
-					if(t.acrossSum > 0):
-						sideWordScores += 2*(t.acrossSum + t.tile.getVal())
-					numDW += 1
-				elif t.special == 4:
-					mainWordScore += t.tile.getVal()
-					if(t.acrossSum > 0):
-						sideWordScores += 3*(t.acrossSum + t.tile.getVal())
-					numTW += 1
-
-		if numDW > 0:
-			mainWordScore *= numDW * 2
-		if numTW > 0:
-			mainWordScore *= numTW * 3
-
-		finalScore += mainWordScore
-		finalScore += sideWordScores
+	mainWordScore *= totalWM
+	finalScore += mainWordScore
+	finalScore += sideWordScores
 
 	for i in range(len(word)):
 		if not current[i].occupied:
 			current[i].tile = tile.Tile()
 
 	return finalScore
-
-
 
 #Implementation of back-tracking algorithms presented in the paper 'The World's Fastest Scrabble Program' by Appel and Jacobson
 #https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf

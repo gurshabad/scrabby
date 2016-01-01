@@ -3,7 +3,7 @@ import trie
 import tile
 import inputbox
 
-def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard, blankTileIndex):
+def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, BOARD, ourBoard):
 	pos_r = sanitizedPosition[1]
 	pos_c = sanitizedPosition[0]
 
@@ -13,19 +13,20 @@ def renderWord(wordPlayed, sanitizedPosition, boardRectangles, playHorizontal, B
 
 	if(playHorizontal):
 		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_c + idx][pos_r], BOARD, idx in blankTileIndex)
+			renderTile(x, boardRectangles[pos_c + idx][pos_r], BOARD, ourBoard.board[pos_r][pos_c + idx].tile.isBlank)
 	else:
 		for idx, x in enumerate(wordPlayed):
-			renderTile(x, boardRectangles[pos_c][pos_r + idx ], BOARD, idx in blankTileIndex)
+			renderTile(x, boardRectangles[pos_c][pos_r + idx ], BOARD, ourBoard.board[pos_r + idx ][pos_c].tile.isBlank )
 	return True
 
-def renderTile(letter2play, square, BOARD, blankTileFlag):
+def renderTile(letter2play, square, BOARD, isBlank):
 	FONTSMALL = pygame.font.SysFont('Andale Mono', 13)
 	FONTSMALL2 = pygame.font.SysFont('Andale Mono', 8)
 	square = pygame.draw.rect(BOARD, (238, 228, 218), (square.topleft[0], square.topleft[1], square.width, square.height))
 	BOARD.blit(FONTSMALL.render(letter2play, 1, (50,50,50)),(square.topleft[0]+10, square.topleft[1]+5))
-	if(blankTileFlag is True):
-		BOARD.blit(FONTSMALL2.render(str(0), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
+	if(isBlank):
+		pass
+		#BOARD.blit(FONTSMALL2.render(str(0), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
 	else:
 		BOARD.blit(FONTSMALL2.render(str(tile.Tile(letter2play).getVal()), 1, (50,50,50)),(square.topleft[0]+17, square.topleft[1]+15))
 
@@ -126,7 +127,12 @@ def verifyShuffle(shuffleLetters, playerRack):
 	shuffled = dict((c, shuffleLetters.count(c)) for c in shuffleLetters)
 
 	for x in shuffled.keys():
-		if(x not in tiles.keys()):
+		if(x == " "):
+			if( "*" not in tiles.keys()):
+				return False
+			if(shuffled[x] > tiles["*"]):
+				return False
+		elif(x not in tiles.keys()):
 			return False
 		else:
 			if(shuffled[x] > tiles[x]): return False
@@ -146,6 +152,7 @@ def getDetails(SECONDHALF, SCREEN, wordListTrie, playerRack):
 
 			shuffleLetters = inputbox.ask(SCREEN, SECONDHALF, "LETTERS:")
 			if(verifyShuffle(shuffleLetters, playerRack)):
+				shuffleLetters = ''.join([ "*" if letter == ' ' else letter for letter in shuffleLetters ])
 				return ("Shuffle", shuffleLetters.lower())
 
 			else:

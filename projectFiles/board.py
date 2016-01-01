@@ -11,7 +11,7 @@ class TheBoard:
 	row_index = range(15)
 
 	def __init__(self):
-		""" 0 - Nothing Special, 1 - Double Letter(DL), 2 - Triple Letter(TL), 3 - Double Word(DW), 4 - Triple Word(TW) """
+		""" 1 - Nothing Special, 2 - Double Letter(DL), 3 - Triple Letter(TL), 4 - Double Word(DW), 5 - Triple Word(TW) """
 		
 		self.board = []
 		for rows in range(self.i):
@@ -25,16 +25,16 @@ class TheBoard:
 		DL = [(0,3), (0,11), (2,6), (2,8), (3,0), (3,7), (3,14), (14,3), (14,11), (12,6), (12,8), (11,0), (11,7), (11,14), (6,2), (6,6), (6,8), (6,12), (8,2), (8,6), (8,8), (8,12), (7,3), (7,11)]
 
 		for pair in DL:
-			self.board[pair[0]][pair[1]].changeSpeciality(1)
+			self.board[pair[0]][pair[1]].changeLSpeciality(2)
 
 		for pair in TL:
-			self.board[pair[0]][pair[1]].changeSpeciality(2)
+			self.board[pair[0]][pair[1]].changeLSpeciality(3)
 
 		for pair in DW:
-			self.board[pair[0]][pair[1]].changeSpeciality(3)
+			self.board[pair[0]][pair[1]].changeWSpeciality(2)
 
 		for pair in TW:
-			self.board[pair[0]][pair[1]].changeSpeciality(4)
+			self.board[pair[0]][pair[1]].changeWSpeciality(3)
 
 	def copyBoard(self, obj):
 		self.board = obj.board
@@ -50,10 +50,10 @@ class TheBoard:
 			for entry in row:
 				if entry.occupied == True: print colored( " "+entry.tile.letter.upper()+" ", 'grey', 'on_white', attrs=['bold']),
 				else:
-					if entry.special == 4: print colored('3xW', 'red', attrs=[]),
-					elif entry.special == 3: print colored('2xW', 'magenta', attrs=[]),
-					elif entry.special == 2: print colored('3xL', 'blue', attrs=[]),
-					elif entry.special == 1: print colored('2xL', 'cyan', attrs=[]),
+					if entry.wordMultiplier == 3: print colored('3xW', 'red', attrs=[]),
+					elif entry.wordMultiplier == 2: print colored('2xW', 'magenta', attrs=[]),
+					elif entry.letterMultiplier == 3: print colored('3xL', 'blue', attrs=[]),
+					elif entry.letterMultiplier == 2: print colored('2xL', 'cyan', attrs=[]),
 					else: print '___', 
 			print "\n"
 			c += 1

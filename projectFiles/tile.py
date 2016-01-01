@@ -2,10 +2,21 @@ class Tile:
 
 	def __init__(self, l = '_'):
 		self.letter = l.lower()
+		if(self.letter == '*'): #Set to 1 if not blank, 0 if blank.
+			self.isBlank = True
+		else:
+			self.isBlank = False 
+
 		self.value = self.setVal(l)
 
+	def setBlank(self):
+		self.isBlank = True
+
 	def getVal(self):
-		return self.value
+		if(self.isBlank):
+			return 0
+		else:
+			return self.value
 
 	def setVal(self, l):
 		if l in "_": return -1
