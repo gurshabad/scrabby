@@ -114,7 +114,7 @@ def getBestWord(ourBoard, legalWords, computerRack, bag, wordListTrie):
 
 		current = validityCheck(simLookUp[2], ourBoard, simLookUp[1], simLookUp[0], copy_computerRack)
 		changedPositions = playerMove(ply0Copy_ourBoard, simLookUp[0], simLookUp[1], simLookUp[2]) #change - fixed
-		copy_computerRack = removeTiles(copy_computerRack, current[0]) #change - not fixed
+		copy_computerRack = removeTiles(copy_computerRack, current) #change - not fixed
 		copy_bag = copy_computerRack.replenish(copy_bag)
 
 		# crossCheckResetData = saveCrossCheckBits(copy_ourBoard)
@@ -330,26 +330,33 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 
 	r = pos[1]
 	c = pos[0]
-	blankTileIndexList = []	
 
 	#Check 1: Check if word stays within bounds of the board
 
 	if(isAcross):
 		if(c+len(word) > 15): 
 			print "Uh oh #1 Invalid move."
-			return (False, blankTileIndexList)
+			return False
 
 	else:
 		if(r+len(word) > 15): 
 			print "Uh oh #1 Invalid move."
-			return (False, blankTileIndexList)
+			return False
 
 	#Get a snapshot of the board at the desired positions
 
 	if(isAcross):
 		current = [ board.board[r][c+elem] for elem in range(len(word)) ]
+		if(c > 0):
+			if(board.board[r][c-1].occupied):
+				print "Uh oh #0 Invalid move."
+				return False
 	else:
 		current = [ board.board[r+elem][c] for elem in range(len(word)) ]
+		if(r > 0):
+			if(board.board[r-1][c].occupied):
+				print "Uh oh #0 Invalid move."
+				return False
 
 	rackCopy = [ t.letter for t in playerRack.rack ]
 	deleteThis = []
@@ -370,12 +377,10 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 
 				if( "*" not in rackCopy):
 					print "Uh oh #2 Invalid move."
-					return (False, blankTileIndexList)
+					return False
 				else:
 					rackCopy.remove("*")
 					deleteThis.append("*")
-					blankTileIndexList.append(idx)
-
 			else:
 				rackCopy.remove(letter) #If we do, remove it from future matches. Its booked.
 				deleteThis.append(letter)
@@ -383,25 +388,25 @@ def validityCheck(isAcross, board, pos, word, playerRack):
 			if(isAcross):
 				if not current[idx].acrossCrossCheck[ord(letter)-ord('a')]:
 					print "Uh oh #5 Invalid move. Extra nonsense words."
-					return (False, blankTileIndexList)
+					return False
 			else:
 				if not current[idx].downCrossCheck[ord(letter)-ord('a')]:
 					print "Uh oh #5 Invalid move. Extra nonsense words."
-					return (False, blankTileIndexList)
+					return False
 				
 
 		elif(current[idx].getChar() != letter): #If not blank position but letter does not match.
 			print "Uh oh #3 Invalid move."
-			return (False, blankTileIndexList)
+			return False
 
 		#If not blank and letter matches, just continue cuz everything is chill.
 
 	if not anchorFlag:
 		print "Uh oh #4 Invalid move."
-		return (False, blankTileIndexList)
+		return False
 
 	#Return list of letters to be removed from the rack.
-	return (''.join(deleteThis), blankTileIndexList)
+	return ''.join(deleteThis)
 
 def undoPlayerMove(board, changedPositions):
 
@@ -944,11 +949,11 @@ def main():
 			#Validity checking.
 			current = validityCheck(isAcross, ourBoard, (c,r), word, playerRack) #Change this function for blank tile.
 
-			if not current[0]:
+			if not current:
 				print "Try again."
 				continue
 			else:
-				playerRack = removeTiles(playerRack, current[0]) #Change this function for blank tile. 
+				playerRack = removeTiles(playerRack, current) #Change this function for blank tile. 
 				playerMove(ourBoard, word, (c,r), isAcross) #Change this function for blank tile.
 				playerTurn = False
 				ourBoard.printBoard()
@@ -975,11 +980,11 @@ def main():
 			if(len(legalWords)):
 				current = validityCheck(legalWords[0][2], ourBoard, legalWords[0][1], legalWords[0][0], computerRack)
 
-				if not current[0]:
+				if not current:
 					print "Try again."
 					continue
 				else:
-					computerRack = removeTiles(computerRack, current[0])
+					computerRack = removeTiles(computerRack, current)
 					playerMove(ourBoard,legalWords[0][0], legalWords[0][1], legalWords[0][2])
 					playerTurn = True
 					ourBoard.printBoard()

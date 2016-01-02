@@ -221,7 +221,7 @@ def run_game():
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], player1.rack)
 
-				if not current[0]:
+				if not current:
 					print "Try again."
 					continue
 				else:
@@ -238,7 +238,7 @@ def run_game():
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2], player1.rack)
 
 					playerTurn = False
-					player1.rack = removeTiles(player1.rack, current[0])					
+					player1.rack = removeTiles(player1.rack, current)					
 					bag = player1.rack.replenish(bag);
 
 					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
@@ -356,7 +356,7 @@ def run_game():
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], player2.rack)
 
-				if not current[0]:
+				if not current:
 					print "Try again."
 					continue
 				else:
@@ -373,7 +373,7 @@ def run_game():
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2], player2.rack)
 
 					playerTurn = True
-					player2.rack = removeTiles(player2.rack, current[0])					
+					player2.rack = removeTiles(player2.rack, current)					
 					bag = player2.rack.replenish(bag);
 
 					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)

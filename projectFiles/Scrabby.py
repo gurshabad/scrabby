@@ -193,7 +193,7 @@ def run_game():
 				#Check for valid move here
 				current = validityCheck(motion[3], ourBoard, motion[2], motion[1], human.rack)
 
-				if not (current[0]):
+				if not (current):
 					print "Error. Invalid Move.\n\n"
 					inputbox.display_box(SCREEN, SECONDHALF, "Invalid Move!", (139,0,0))
 					time.sleep(1)
@@ -209,7 +209,7 @@ def run_game():
 					playerMove(ourBoard, motion[1], (motion[2][0], motion[2][1]), motion[3], human.rack) #Play the move on offline board
 					
 					playerTurn = False #Change turn to Computer
-					human.rack = removeTiles(human.rack, current[0])					
+					human.rack = removeTiles(human.rack, current)					
 					bag = human.rack.replenish(bag) #Replenish Player's Rack after legit move
 
 					renderWord(motion[1], motion[2], boardRectangles, motion[3], BOARD, ourBoard)
@@ -303,7 +303,7 @@ def run_game():
 
 				current = validityCheck(AIWord[2], ourBoard, AIWord[1], AIWord[0], computer.rack)
 
-				if not current[0]:
+				if not current:
 					print "Try again."
 					continue
 				else:
@@ -319,7 +319,7 @@ def run_game():
 					playerMove(ourBoard,AIWord[0], AIWord[1], AIWord[2], computer.rack)
 
 					playerTurn = True
-					computer.rack = removeTiles(computer.rack, current[0])
+					computer.rack = removeTiles(computer.rack, current)
 					bag = computer.rack.replenish(bag);
 
 					renderWord(AIWord[0], AIWord[1], boardRectangles, AIWord[2], BOARD, ourBoard)
